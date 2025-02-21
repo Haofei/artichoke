@@ -94,7 +94,7 @@ required-features = ["cli"]
 members = ["artichoke-*", "mezzaluna-*", "scolapasta-*", "spinoso-*"]
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
 rust-version = "1.85.0"
 license = "MIT"
 repository = "https://github.com/artichoke/artichoke"

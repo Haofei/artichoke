@@ -1,19 +1,19 @@
 use std::borrow::Cow;
 use std::error;
-use std::ffi::{c_void, CStr};
+use std::ffi::{CStr, c_void};
 use std::fmt;
 use std::io::{self, Write as _};
 use std::ptr::NonNull;
 
 use spinoso_exception::{NameError, ScriptError};
 
+use crate::Artichoke;
 use crate::class;
 use crate::convert::BoxUnboxVmValue;
 use crate::core::{ClassRegistry, TryConvertMut};
 use crate::error::{Error, RubyException};
 use crate::module;
 use crate::sys;
-use crate::Artichoke;
 
 /// Typedef for an mruby free function for an [`mrb_value`](sys::mrb_value) with
 /// `tt` [`MRB_TT_CDATA`].
@@ -371,14 +371,11 @@ impl NotDefinedError {
     #[must_use]
     pub fn fqdn(&self) -> &str {
         match self {
-            Self::EnclosingScope(ref fqdn)
-            | Self::Super(ref fqdn)
-            | Self::Class(ref fqdn)
-            | Self::Module(ref fqdn) => fqdn.as_ref(),
-            Self::GlobalConstant(ref name)
-            | Self::ClassConstant(ref name)
-            | Self::Method(ref name)
-            | Self::ModuleConstant(ref name) => name.as_ref(),
+            Self::EnclosingScope(fqdn) | Self::Super(fqdn) | Self::Class(fqdn) | Self::Module(fqdn) => fqdn.as_ref(),
+            Self::GlobalConstant(name)
+            | Self::ClassConstant(name)
+            | Self::Method(name)
+            | Self::ModuleConstant(name) => name.as_ref(),
         }
     }
 

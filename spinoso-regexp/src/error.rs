@@ -52,9 +52,9 @@ impl error::Error for Error {
     #[inline]
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Self::Argument(ref err) => Some(err),
-            Self::Regexp(ref err) => Some(err),
-            Self::Syntax(ref err) => Some(err),
+            Self::Argument(err) => Some(err),
+            Self::Regexp(err) => Some(err),
+            Self::Syntax(err) => Some(err),
         }
     }
 }

@@ -38,10 +38,6 @@ macro_rules! emit_fatal_warning {
 /// [`Artichoke`]: crate::Artichoke
 /// [`sys::mrb_state`]: crate::sys::mrb_state
 #[macro_export]
-#[expect(
-    edition_2024_expr_fragment_specifier,
-    reason = "want the new 2024 edition behavior once we upgrade"
-)]
 macro_rules! unwrap_interpreter {
     ($mrb:ident, to => $to:ident, or_else = ()) => {
         let mrb = $mrb;

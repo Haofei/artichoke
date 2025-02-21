@@ -197,8 +197,8 @@ impl error::Error for Error {
     #[inline]
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Self::Argument(ref err) => Some(err),
-            Self::Invalid(ref err) => Some(err),
+            Self::Argument(err) => Some(err),
+            Self::Invalid(err) => Some(err),
         }
     }
 }
