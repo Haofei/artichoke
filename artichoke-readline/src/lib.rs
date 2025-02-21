@@ -178,7 +178,7 @@ fn home_dir() -> Option<PathBuf> {
 
 #[cfg(windows)]
 fn home_dir() -> Option<PathBuf> {
-    use known_folders::{get_known_folder_path, KnownFolder};
+    use known_folders::{KnownFolder, get_known_folder_path};
 
     get_known_folder_path(KnownFolder::Profile)
 }
@@ -249,9 +249,21 @@ pub fn get_readline_edit_mode(contents: impl AsRef<[u8]>) -> Option<EditMode> {
             //
             // In this case `editing-mode` is a variable name.
             let line = match line {
-                [b'e' | b'E', b'd' | b'D', b'i' | b'I', b't' | b'T', b'i' | b'I', b'n' | b'N', b'g' | b'G', b'-', b'm' | b'M', b'o' | b'O', b'd' | b'D', b'e' | b'E', rest @ ..] => {
-                    rest
-                }
+                [
+                    b'e' | b'E',
+                    b'd' | b'D',
+                    b'i' | b'I',
+                    b't' | b'T',
+                    b'i' | b'I',
+                    b'n' | b'N',
+                    b'g' | b'G',
+                    b'-',
+                    b'm' | b'M',
+                    b'o' | b'O',
+                    b'd' | b'D',
+                    b'e' | b'E',
+                    rest @ ..,
+                ] => rest,
                 _ => continue,
             };
             // Skip leading whitespace.
@@ -278,9 +290,15 @@ pub fn get_readline_edit_mode(contents: impl AsRef<[u8]>) -> Option<EditMode> {
                     // Last occurrence of editing mode directive takes effect.
                     edit_mode = Some(EditMode::Vi);
                 }
-                [b'e' | b'E', b'm' | b'M', b'a' | b'A', b'c' | b'C', b's' | b'S', next, ..]
-                    if posix_space::is_space(*next) =>
-                {
+                [
+                    b'e' | b'E',
+                    b'm' | b'M',
+                    b'a' | b'A',
+                    b'c' | b'C',
+                    b's' | b'S',
+                    next,
+                    ..,
+                ] if posix_space::is_space(*next) => {
                     // Last occurrence of editing mode directive takes effect.
                     edit_mode = Some(EditMode::Emacs);
                 }
@@ -311,7 +329,7 @@ fn trim_whitespace_front(mut s: &[u8]) -> &[u8] {
 
 #[cfg(test)]
 mod tests {
-    use super::{get_readline_edit_mode, EditMode};
+    use super::{EditMode, get_readline_edit_mode};
 
     #[test]
     fn test_default_edit_mode_is_emacs() {

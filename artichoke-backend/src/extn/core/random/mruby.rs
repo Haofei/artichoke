@@ -2,7 +2,7 @@
 
 use std::ffi::CStr;
 
-use super::{trampoline, Rng};
+use super::{Rng, trampoline};
 use crate::extn::prelude::*;
 
 const RANDOM_CSTR: &CStr = c"Random";

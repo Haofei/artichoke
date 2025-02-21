@@ -249,7 +249,7 @@ mod tests {
 
     use termcolor::Ansi;
 
-    use super::{run, Args, ExecutionResult};
+    use super::{Args, ExecutionResult, run};
 
     #[test]
     fn run_with_copyright() {

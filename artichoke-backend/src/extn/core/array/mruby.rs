@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 
-use crate::extn::core::array::{trampoline, Array};
+use crate::extn::core::array::{Array, trampoline};
 use crate::extn::prelude::*;
 
 const ARRAY_CSTR: &CStr = c"Array";

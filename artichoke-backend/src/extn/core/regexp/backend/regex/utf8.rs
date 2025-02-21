@@ -85,11 +85,7 @@ impl RegexpType for Utf8 {
                 result.push(index);
             }
         }
-        if result.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(result))
-        }
+        if result.is_empty() { Ok(None) } else { Ok(Some(result)) }
     }
 
     fn captures_len(&self, haystack: Option<&[u8]>) -> Result<usize, Error> {

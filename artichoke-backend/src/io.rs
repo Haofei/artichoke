@@ -3,12 +3,12 @@ use std::error;
 use std::fmt;
 use std::io;
 
+use crate::Artichoke;
 use crate::core::{ClassRegistry, Io, TryConvertMut};
 use crate::error::{Error, RubyException};
 use crate::ffi::InterpreterExtractError;
 use crate::state::output::Output;
 use crate::sys;
-use crate::Artichoke;
 
 impl Io for Artichoke {
     type Error = Error;

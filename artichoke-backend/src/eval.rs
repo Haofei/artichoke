@@ -4,6 +4,7 @@ use std::path::Path;
 use scolapasta_path::os_str_to_bytes;
 use spinoso_exception::{ArgumentError, Fatal, LoadError};
 
+use crate::Artichoke;
 use crate::core::{Eval, LoadSources, Parser};
 use crate::error::Error;
 use crate::ffi::InterpreterExtractError;
@@ -11,8 +12,7 @@ use crate::state::parser::Context;
 use crate::sys;
 use crate::sys::protect;
 use crate::value::Value;
-use crate::Artichoke;
-use crate::{exception_handler, RubyException};
+use crate::{RubyException, exception_handler};
 
 impl Eval for Artichoke {
     type Value = Value;

@@ -79,8 +79,8 @@ mod whitespace;
 
 pub use error::{ArgumentError, Error, InvalidRadixError, InvalidRadixExceptionKind};
 use parser::{Sign, State as ParseState};
-pub use radix::Radix;
 use radix::RADIX_TABLE;
+pub use radix::Radix;
 use subject::IntegerString;
 
 /// Parse a given byte string and optional [`Radix`] into an [`i64`].

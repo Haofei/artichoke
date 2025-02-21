@@ -5,11 +5,11 @@ use std::ffi::{OsStr, OsString};
 use scolapasta_path::{os_str_to_bytes, os_string_to_bytes};
 use spinoso_string::String;
 
+use crate::Artichoke;
 use crate::convert::BoxUnboxVmValue;
 use crate::core::TryConvertMut;
 use crate::error::Error;
 use crate::value::Value;
-use crate::Artichoke;
 
 impl TryConvertMut<Vec<u8>, Value> for Artichoke {
     type Error = Error;

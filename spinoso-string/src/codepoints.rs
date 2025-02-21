@@ -1,8 +1,8 @@
 use core::fmt::{self, Write};
 use core::iter::FusedIterator;
 
-use crate::enc::{self};
 use crate::String;
+use crate::enc::{self};
 
 /// Error returned when failing to construct a [`Codepoints`] iterator/
 ///

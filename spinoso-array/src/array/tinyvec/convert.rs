@@ -6,9 +6,9 @@ use alloc::vec::Vec;
 
 use tinyvec::TinyVec;
 
+use crate::array::INLINE_CAPACITY;
 use crate::array::tinyvec::TinyArray;
 use crate::array::vec::Array;
-use crate::array::INLINE_CAPACITY;
 
 impl<T> From<Vec<T>> for TinyArray<T>
 where

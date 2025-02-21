@@ -5,6 +5,7 @@ use std::fmt;
 
 use spinoso_exception::Fatal;
 
+use crate::Artichoke;
 use crate::core::{ClassRegistry, Eval, TryConvertMut};
 use crate::error::{Error, RubyException};
 use crate::extn;
@@ -13,7 +14,6 @@ use crate::gc::{MrbGarbageCollection, State as GcState};
 use crate::release_metadata::ReleaseMetadata;
 use crate::state::State;
 use crate::sys;
-use crate::Artichoke;
 
 /// Create and initialize an [`Artichoke`] interpreter.
 ///

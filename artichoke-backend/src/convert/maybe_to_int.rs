@@ -2,9 +2,9 @@ use artichoke_core::debug::Debug as _;
 use artichoke_core::value::Value as _;
 use spinoso_exception::TypeError;
 
+use crate::Artichoke;
 use crate::error::Error;
 use crate::value::Value;
-use crate::Artichoke;
 
 #[derive(Debug)]
 pub enum MaybeToInt {
@@ -52,7 +52,7 @@ pub fn maybe_to_int(interp: &mut Artichoke, value: Value) -> Result<MaybeToInt, 
 
 #[cfg(test)]
 mod tests {
-    use super::{maybe_to_int, MaybeToInt};
+    use super::{MaybeToInt, maybe_to_int};
     use crate::test::prelude::*;
 
     #[test]

@@ -17,9 +17,9 @@
 //! [`require_relative`]: https://ruby-doc.org/core-3.1.2/Kernel.html#method-i-require_relative
 
 use core::hash::BuildHasher;
+use std::collections::TryReserveError;
 use std::collections::hash_map::RandomState;
 use std::collections::hash_set::HashSet;
-use std::collections::TryReserveError;
 use std::path::{Path, PathBuf};
 
 mod iter;

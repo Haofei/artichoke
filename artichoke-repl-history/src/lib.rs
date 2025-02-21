@@ -142,12 +142,12 @@ pub fn repl_history_file() -> Option<PathBuf> {
 #[cfg(target_vendor = "apple")]
 fn repl_history_dir() -> Option<PathBuf> {
     use std::env;
-    use std::ffi::{c_char, CStr, OsString};
+    use std::ffi::{CStr, OsString, c_char};
     use std::os::unix::ffi::OsStringExt;
 
     use sysdir::{
-        sysdir_get_next_search_path_enumeration, sysdir_search_path_directory_t, sysdir_start_search_path_enumeration,
-        PATH_MAX, SYSDIR_DOMAIN_MASK_USER,
+        PATH_MAX, SYSDIR_DOMAIN_MASK_USER, sysdir_get_next_search_path_enumeration, sysdir_search_path_directory_t,
+        sysdir_start_search_path_enumeration,
     };
 
     // Use the standard system directories as retrieved by `sysdir(3)` APIs:
@@ -282,7 +282,7 @@ fn repl_history_dir() -> Option<PathBuf> {
 #[must_use]
 #[cfg(windows)]
 fn repl_history_dir() -> Option<PathBuf> {
-    use known_folders::{get_known_folder_path, KnownFolder};
+    use known_folders::{KnownFolder, get_known_folder_path};
 
     let local_app_data = get_known_folder_path(KnownFolder::LocalAppData)?;
     Some(local_app_data.join("Artichoke Ruby").join("airb").join("data"))

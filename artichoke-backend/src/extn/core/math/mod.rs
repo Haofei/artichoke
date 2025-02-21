@@ -25,7 +25,7 @@ pub(in crate::extn) mod mruby;
 pub(super) mod trampoline;
 
 #[doc(inline)]
-pub use spinoso_math::{DomainError, Math, E, PI};
+pub use spinoso_math::{DomainError, E, Math, PI};
 use spinoso_math::{Error as MathError, NotImplementedError as MathNotImplementedError};
 
 impl RubyException for DomainError {

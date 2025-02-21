@@ -62,5 +62,5 @@ pub use paths::{
     normalize_slashes,
 };
 pub use platform_string::{
-    bytes_to_os_str, bytes_to_os_string, os_str_to_bytes, os_string_to_bytes, ConvertBytesError,
+    ConvertBytesError, bytes_to_os_str, bytes_to_os_string, os_str_to_bytes, os_string_to_bytes,
 };

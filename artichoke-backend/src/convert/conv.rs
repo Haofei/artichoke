@@ -444,7 +444,7 @@ pub fn check_to_a(interp: &mut Artichoke, value: Value) -> Result<Value, Error> 
 mod tests {
     use bstr::ByteSlice;
 
-    use super::{convert_type, to_int, ConvertOnError};
+    use super::{ConvertOnError, convert_type, to_int};
     use crate::test::prelude::*;
 
     #[test]

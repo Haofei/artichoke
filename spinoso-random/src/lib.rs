@@ -137,11 +137,11 @@ mod rand;
 mod random;
 mod urandom;
 
-pub use random::{new_seed, seed_to_key, Random};
+pub use random::{Random, new_seed, seed_to_key};
 pub use urandom::urandom;
 
 #[cfg(feature = "rand-method")]
-pub use self::rand::{rand, Max, Rand};
+pub use self::rand::{Max, Rand, rand};
 
 /// Sum type of all errors possibly returned from `Random` functions.
 ///

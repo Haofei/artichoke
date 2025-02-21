@@ -1407,7 +1407,7 @@ mod proptests {
     use arbitrary::{Arbitrary, Unstructured};
     use raw_parts::RawParts;
 
-    use super::{ensure_nul_terminated, Buf};
+    use super::{Buf, ensure_nul_terminated};
 
     pub fn run_arbitrary<T>(mut f: impl FnMut(T))
     where

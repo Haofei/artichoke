@@ -6,7 +6,7 @@ use core::ptr;
 use core::slice;
 use core::str;
 use std::collections::TryReserveError;
-use std::ffi::{c_char, c_double, c_int, c_void, CStr};
+use std::ffi::{CStr, c_char, c_double, c_int, c_void};
 use std::io::Write as _;
 use std::ptr::NonNull;
 

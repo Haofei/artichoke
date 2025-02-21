@@ -5,7 +5,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use bstr::{BString, ByteSlice};
-use scolapasta_path::{absolutize_relative_to, normalize_slashes, ConvertBytesError};
+use scolapasta_path::{ConvertBytesError, absolutize_relative_to, normalize_slashes};
 
 #[derive(Default, Debug, PartialEq, Eq)]
 pub struct Native {

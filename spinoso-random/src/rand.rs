@@ -162,7 +162,7 @@ pub fn rand(rng: &mut Random, max: Max) -> Result<Rand, ArgumentError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{rand, Max, Rand};
+    use super::{Max, Rand, rand};
     use crate::Random;
 
     #[test]

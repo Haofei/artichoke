@@ -5,12 +5,12 @@ use std::fmt;
 use bstr::BString;
 use scolapasta_string_escape::format_debug_escape_into;
 
+use crate::Artichoke;
 use crate::core::{TryConvertMut, Value as _};
 use crate::error::{Error, RubyException};
 use crate::gc::MrbGarbageCollection;
 use crate::sys;
 use crate::value::Value;
-use crate::Artichoke;
 
 /// Incrementally construct a [`CaughtException`].
 ///

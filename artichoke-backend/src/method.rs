@@ -2,9 +2,9 @@ use std::borrow::Cow;
 use std::ffi::{CStr, CString};
 use std::hash::{Hash, Hasher};
 
+use crate::Artichoke;
 use crate::def::{ConstantNameError, Method, NotDefinedError};
 use crate::sys;
-use crate::Artichoke;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Type {

@@ -10,11 +10,11 @@ use binary::BinaryString;
 use scolapasta_strbuf::Buf;
 use utf8::Utf8String;
 
+use crate::CodepointsError;
 use crate::codepoints::InvalidCodepointError;
 use crate::encoding::Encoding;
 use crate::iter::{Bytes, IntoIter, Iter, IterMut};
 use crate::ord::OrdError;
-use crate::CodepointsError;
 
 mod ascii;
 mod binary;

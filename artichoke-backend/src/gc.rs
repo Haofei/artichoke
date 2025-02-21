@@ -114,11 +114,7 @@ pub enum State {
 
 impl From<bool> for State {
     fn from(state: bool) -> Self {
-        if state {
-            Self::Enabled
-        } else {
-            Self::Disabled
-        }
+        if state { Self::Enabled } else { Self::Disabled }
     }
 }
 

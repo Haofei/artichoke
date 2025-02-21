@@ -1,6 +1,6 @@
 use rand_core::{RngCore, SeedableRng};
 
-use super::{seed_to_key, Mt, Random, DEFAULT_SEED_BYTES};
+use super::{DEFAULT_SEED_BYTES, Mt, Random, seed_to_key};
 
 impl SeedableRng for Random {
     type Seed = [u8; DEFAULT_SEED_BYTES];

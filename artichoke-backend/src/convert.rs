@@ -4,12 +4,12 @@ use std::fmt;
 
 use spinoso_exception::TypeError;
 
+use crate::Artichoke;
 use crate::core::{ClassRegistry, Convert, ConvertMut, TryConvert, TryConvertMut, Value as _};
 use crate::error::{Error, RubyException};
 use crate::sys;
 use crate::types::{Ruby, Rust};
 use crate::value::Value;
-use crate::Artichoke;
 
 mod array;
 mod boolean;
@@ -27,15 +27,15 @@ mod string;
 
 pub use boxing::{BoxUnboxVmValue, HeapAllocated, HeapAllocatedData, Immediate, UnboxedValueGuard};
 pub use conv::{
-    check_string_type, check_to_a, check_to_ary, check_to_int, check_to_str, convert_type, to_a, to_ary, to_i, to_int,
-    to_str, ConvertOnError,
+    ConvertOnError, check_string_type, check_to_a, check_to_ary, check_to_int, check_to_str, convert_type, to_a,
+    to_ary, to_i, to_int, to_str,
 };
 pub use float_to_int::float_to_int;
 pub use implicit::{
     implicitly_convert_to_int, implicitly_convert_to_nilable_string, implicitly_convert_to_spinoso_string,
     implicitly_convert_to_string,
 };
-pub use maybe_to_int::{maybe_to_int, MaybeToInt};
+pub use maybe_to_int::{MaybeToInt, maybe_to_int};
 
 /// Provide a fallible converter for types that implement an infallible
 /// conversion.

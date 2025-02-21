@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::Artichoke;
 use crate::convert::{BoxUnboxVmValue, UnboxRubyError};
 use crate::core::{TryConvertMut, Value as _};
 use crate::error::Error;
@@ -7,7 +8,6 @@ use crate::extn::core::array::Array;
 use crate::sys;
 use crate::types::{Ruby, Rust};
 use crate::value::Value;
-use crate::Artichoke;
 
 impl TryConvertMut<Vec<(Value, Value)>, Value> for Artichoke {
     type Error = Error;

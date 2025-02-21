@@ -807,11 +807,7 @@ impl<T> Array<T> {
     #[inline]
     #[must_use]
     pub fn shift(&mut self) -> Option<T> {
-        if self.is_empty() {
-            None
-        } else {
-            Some(self.0.remove(0))
-        }
+        if self.is_empty() { None } else { Some(self.0.remove(0)) }
     }
 
     /// Removes the first `n` elements from the vector.

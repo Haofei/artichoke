@@ -3,11 +3,11 @@ use std::borrow::Cow;
 use intaglio::SymbolOverflowError;
 use spinoso_exception::Fatal;
 
+use crate::Artichoke;
 use crate::core::{ClassRegistry, Intern, TryConvertMut};
 use crate::error::{Error, RubyException};
 use crate::ffi::InterpreterExtractError;
 use crate::sys;
-use crate::Artichoke;
 
 impl Artichoke {
     pub fn lookup_symbol_with_trailing_nul(&self, symbol: u32) -> Result<Option<&[u8]>, Error> {

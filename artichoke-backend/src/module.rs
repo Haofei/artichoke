@@ -1,16 +1,16 @@
 use std::borrow::Cow;
 use std::collections::HashSet;
 use std::convert::AsRef;
-use std::ffi::{c_void, CStr};
+use std::ffi::{CStr, c_void};
 use std::hash::{Hash, Hasher};
 use std::ptr::NonNull;
 
+use crate::Artichoke;
 use crate::core::Intern;
 use crate::def::{ConstantNameError, EnclosingRubyScope, Method, NotDefinedError};
 use crate::error::Error;
 use crate::method;
 use crate::sys;
-use crate::Artichoke;
 
 #[derive(Debug)]
 pub struct Builder<'a> {

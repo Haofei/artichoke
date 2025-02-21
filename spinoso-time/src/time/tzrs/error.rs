@@ -6,9 +6,9 @@ use core::time::TryFromFloatSecsError;
 use std::error;
 use std::str::Utf8Error;
 
+use tz::error::TzError;
 use tz::error::datetime::DateTimeError;
 use tz::error::timezone::LocalTimeTypeError;
-use tz::error::TzError;
 
 /// A wrapper around some of the errors provided by `tz-rs`.
 #[derive(Debug)]

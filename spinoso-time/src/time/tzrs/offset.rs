@@ -411,8 +411,8 @@ mod tests {
     use tz::{LocalTimeType, TimeZone};
 
     use super::*;
-    use crate::tzrs::error::TimeError;
     use crate::tzrs::Time;
+    use crate::tzrs::error::TimeError;
 
     fn offset_seconds_from_fixed_offset(input: &str) -> Result<i32, TimeError> {
         let offset = Offset::try_from(input)?;

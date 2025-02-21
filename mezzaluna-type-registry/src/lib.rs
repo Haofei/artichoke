@@ -78,8 +78,8 @@
 mod readme {}
 
 use std::any::{self, Any, TypeId};
-use std::collections::hash_map::{HashMap, RandomState, Values};
 use std::collections::TryReserveError;
+use std::collections::hash_map::{HashMap, RandomState, Values};
 use std::fmt;
 use std::hash::BuildHasher;
 use std::iter::FusedIterator;

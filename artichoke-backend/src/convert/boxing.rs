@@ -7,6 +7,7 @@ use std::ptr;
 
 use spinoso_exception::TypeError;
 
+use crate::Artichoke;
 use crate::core::Value as _;
 use crate::def::NotDefinedError;
 use crate::error::Error;
@@ -14,7 +15,6 @@ use crate::ffi::InterpreterExtractError;
 use crate::sys;
 use crate::types::Ruby;
 use crate::value::Value;
-use crate::Artichoke;
 
 pub struct UnboxedValueGuard<'a, T> {
     guarded: ManuallyDrop<T>,

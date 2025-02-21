@@ -11,10 +11,10 @@ use std::sync::PoisonError;
 
 use artichoke_readline::{get_readline_edit_mode, rl_read_init_file};
 use artichoke_repl_history::repl_history_file;
+use rustyline::Editor;
 use rustyline::config::Builder;
 use rustyline::error::ReadlineError;
 use rustyline::history::FileHistory;
-use rustyline::Editor;
 use termcolor::WriteColor;
 
 use crate::backend::state::parser::Context;

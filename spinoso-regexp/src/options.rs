@@ -46,11 +46,7 @@ impl From<bool> for RegexpOption {
     /// `true` creates a [`RegexpOption::Enabled`]. `false` creates a
     /// [`RegexpOption::Disabled`].
     fn from(value: bool) -> Self {
-        if value {
-            Self::Enabled
-        } else {
-            Self::Disabled
-        }
+        if value { Self::Enabled } else { Self::Disabled }
     }
 }
 

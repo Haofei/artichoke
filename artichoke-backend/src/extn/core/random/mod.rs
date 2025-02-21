@@ -23,7 +23,7 @@ use spinoso_random::{InitializeError, NewSeedError, UrandomError};
 #[doc(inline)]
 pub use spinoso_random::{Max, Rand, Random};
 
-use crate::convert::{implicitly_convert_to_int, HeapAllocatedData};
+use crate::convert::{HeapAllocatedData, implicitly_convert_to_int};
 use crate::extn::prelude::*;
 
 pub(in crate::extn) mod mruby;

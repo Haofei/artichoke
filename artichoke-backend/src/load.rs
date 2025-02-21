@@ -8,9 +8,9 @@ use artichoke_core::load::{LoadSources, Loaded, Required};
 use scolapasta_path::os_str_to_bytes;
 use spinoso_exception::LoadError;
 
+use crate::Artichoke;
 use crate::error::Error;
 use crate::ffi::InterpreterExtractError;
-use crate::Artichoke;
 
 const RUBY_EXTENSION: &str = "rb";
 

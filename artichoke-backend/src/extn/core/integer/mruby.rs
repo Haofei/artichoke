@@ -1,7 +1,7 @@
 use std::ffi::CStr;
 
-use crate::extn::core::integer::trampoline;
 use crate::extn::core::integer::Integer;
+use crate::extn::core::integer::trampoline;
 use crate::extn::prelude::*;
 
 const INTEGER_CSTR: &CStr = c"Integer";

@@ -611,10 +611,11 @@ mod tests {
         let err = subsec(&mut interp, (Some(b"1"), Some(b"Object.new"))).unwrap_err();
 
         assert_eq!(err.name(), "ArgumentError");
-        assert!(err
-            .message()
-            .as_bstr()
-            .starts_with(b"unexpected unit: #<Object:".as_bstr()));
+        assert!(
+            err.message()
+                .as_bstr()
+                .starts_with(b"unexpected unit: #<Object:".as_bstr())
+        );
     }
 
     #[test]
