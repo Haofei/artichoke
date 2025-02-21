@@ -344,7 +344,6 @@ impl TryFrom<String> for Offset {
 
 impl From<TimeZoneRef<'static>> for Offset {
     #[inline]
-    #[must_use]
     fn from(tz: TimeZoneRef<'static>) -> Self {
         Self::tz(tz)
     }

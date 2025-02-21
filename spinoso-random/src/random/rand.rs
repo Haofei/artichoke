@@ -45,7 +45,6 @@ impl RngCore for Random {
     /// assert_ne!(random.next_u64(), random.next_u64());
     /// ```
     #[inline]
-    #[must_use]
     fn next_u64(&mut self) -> u64 {
         self.mt.next_u64()
     }
@@ -65,7 +64,6 @@ impl RngCore for Random {
     /// assert_ne!(random.next_u32(), random.next_u32());
     /// ```
     #[inline]
-    #[must_use]
     fn next_u32(&mut self) -> u32 {
         self.mt.next_u32()
     }

@@ -750,7 +750,6 @@ impl IntoIterator for String {
     /// assert_eq!(iterator.next(), None);
     /// ```
     #[inline]
-    #[must_use]
     fn into_iter(self) -> Self::IntoIter {
         self.inner.into_iter()
     }
@@ -775,7 +774,6 @@ impl<'a> IntoIterator for &'a String {
     /// }
     /// ```
     #[inline]
-    #[must_use]
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
@@ -802,7 +800,6 @@ impl<'a> IntoIterator for &'a mut String {
     /// assert_eq!(s, b"111");
     /// ```
     #[inline]
-    #[must_use]
     fn into_iter(self) -> Self::IntoIter {
         self.iter_mut()
     }
