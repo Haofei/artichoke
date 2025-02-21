@@ -8,6 +8,7 @@ concurrency:
   group: spec-state-${{ github.head_ref }}
 env:
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+permissions: {}
 jobs:
   spec-state:
     name: spec-state
@@ -17,12 +18,13 @@ jobs:
       RUST_BACKTRACE: 1
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           path: artichoke
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: artichoke/setup-rust/build-and-test@v1.12.1
+        uses: artichoke/setup-rust/build-and-test@68e0ebb3b406970de1cc2ca807797c9156a198a7 # v2.0.1
         with:
           toolchain: "1.83.0"
 
@@ -77,42 +79,54 @@ jobs:
 
       - name: Generate spec tags
         run: |
-          ./artichoke/spec-runner/target/release/spec-runner --quiet --format tagger artichoke/spec-runner/spec-state.toml | tee "${{ steps.tagged.outputs.yaml }}"
-          ./artichoke/spec-runner/scripts/spec-yaml-to-json.rb "${{ steps.tagged.outputs.yaml }}" > "${{ steps.tagged.outputs.json }}"
+          ./artichoke/spec-runner/target/release/spec-runner --quiet --format tagger artichoke/spec-runner/spec-state.toml | tee "${YAML_DEST}"
+          ./artichoke/spec-runner/scripts/spec-yaml-to-json.rb "${YAML_DEST}" > "${JSON_DEST}"
+        env:
+          YAML_DEST: ${{ steps.tagged.outputs.yaml }}
+          JSON_DEST: ${{ steps.tagged.outputs.json }}
 
       - name: Generate spec exceptions
         run: |
-          ./artichoke/spec-runner/target/release/spec-runner --quiet --format yaml artichoke/spec-runner/spec-state.toml | tee "${{ steps.exceptions.outputs.yaml }}"
-          ./artichoke/spec-runner/scripts/spec-yaml-to-json.rb "${{ steps.exceptions.outputs.yaml }}" > "${{ steps.exceptions.outputs.json }}"
+          ./artichoke/spec-runner/target/release/spec-runner --quiet --format yaml artichoke/spec-runner/spec-state.toml | tee "${YAML_DEST}"
+          ./artichoke/spec-runner/scripts/spec-yaml-to-json.rb "${YAML_DEST}" > "${JSON_DEST}"
+        env:
+          YAML_DEST: ${{ steps.exceptions.outputs.yaml }}
+          JSON_DEST: ${{ steps.exceptions.outputs.json }}
 
       - name: Checkout spec state repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: artichoke/spec-state
           path: spec-state
           ssh-key: ${{ secrets.SPEC_STATE_SSH_DEPLOY_PRIVATE_KEY }}
+          persist-credentials: false
 
       - name: Copy spec-state reports
         run: |
           # tags
-          mkdir -p "spec-state/reports/tagged/${{ steps.commit.outputs.year }}/${{ steps.commit.outputs.month }}"
-          cp "${{ steps.tagged.outputs.json }}" "spec-state/reports/tagged/${{ steps.commit.outputs.year }}/${{ steps.commit.outputs.month }}/${{ steps.tagged.outputs.json }}"
-          cp "${{ steps.tagged.outputs.json }}" "spec-state/reports/tagged/${{ steps.commit.outputs.year }}/${{ steps.commit.outputs.month }}/latest.json"
-          cp "${{ steps.tagged.outputs.json }}" "spec-state/reports/tagged/${{ steps.commit.outputs.year }}/latest.json"
-          cp "${{ steps.tagged.outputs.json }}" "spec-state/reports/tagged/latest.json"
+          mkdir -p "spec-state/reports/tagged/${OUTPUT_YEAR}/${OUTPUT_MONTH}"
+          cp "${TAGGED_OUTPUT_JSON}" "spec-state/reports/tagged/${OUTPUT_YEAR}/${OUTPUT_MONTH}/${TAGGED_OUTPUT_JSON}"
+          cp "${TAGGED_OUTPUT_JSON}" "spec-state/reports/tagged/${OUTPUT_YEAR}/${OUTPUT_MONTH}/latest.json"
+          cp "${TAGGED_OUTPUT_JSON}" "spec-state/reports/tagged/${OUTPUT_YEAR}/latest.json"
+          cp "${TAGGED_OUTPUT_JSON}" "spec-state/reports/tagged/latest.json"
           # exceptions
-          mkdir -p "spec-state/reports/exceptions/${{ steps.commit.outputs.year }}/${{ steps.commit.outputs.month }}"
-          cp "${{ steps.exceptions.outputs.json }}" "spec-state/reports/exceptions/${{ steps.commit.outputs.year }}/${{ steps.commit.outputs.month }}/${{ steps.exceptions.outputs.json }}"
-          cp "${{ steps.exceptions.outputs.json }}" "spec-state/reports/exceptions/${{ steps.commit.outputs.year }}/${{ steps.commit.outputs.month }}/latest.json"
-          cp "${{ steps.exceptions.outputs.json }}" "spec-state/reports/exceptions/${{ steps.commit.outputs.year }}/latest.json"
-          cp "${{ steps.exceptions.outputs.json }}" "spec-state/reports/exceptions/latest.json"
+          mkdir -p "spec-state/reports/exceptions/${OUTPUT_YEAR}/${OUTPUT_MONTH}"
+          cp "${EXCEPTIONS_OUTPUT_JSON}" "spec-state/reports/exceptions/${OUTPUT_YEAR}/${OUTPUT_MONTH}/${EXCEPTIONS_OUTPUT_JSON}"
+          cp "${EXCEPTIONS_OUTPUT_JSON}" "spec-state/reports/exceptions/${OUTPUT_YEAR}/${OUTPUT_MONTH}/latest.json"
+          cp "${EXCEPTIONS_OUTPUT_JSON}" "spec-state/reports/exceptions/${OUTPUT_YEAR}/latest.json"
+          cp "${EXCEPTIONS_OUTPUT_JSON}" "spec-state/reports/exceptions/latest.json"
+        env:
+          TAGGED_OUTPUT_JSON: ${{ steps.tagged.outputs.json }}
+          EXCEPTIONS_OUTPUT_JSON: ${{ steps.exceptions.outputs.json }}
+          OUTPUT_YEAR: ${{ steps.commit.outputs.year }}
+          OUTPUT_MONTH: ${{ steps.commit.outputs.month }}
 
       - name: Push spec-state
         run: |
           cat <<EOF > message.txt
           spec-state 💎📈
 
-          As of artichoke/artichoke@${{ steps.commit.outputs.hash }}.
+          As of artichoke/artichoke@${AS_OF_COMMIT}.
 
           Generated with the spec-state.yaml GitHub Actions workflow.
           EOF
@@ -120,3 +134,5 @@ jobs:
           git -c user.name=artichoke-ci -c user.email=ci@artichokeruby.org commit --file=message.txt --allow-empty
           git push origin trunk
         working-directory: "spec-state"
+        env:
+          AS_OF_COMMIT: ${{ steps.commit.outputs.hash }}
