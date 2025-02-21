@@ -214,10 +214,10 @@ impl fmt::Display for Error {
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Self::Argument(ref err) => Some(err),
-            Self::Initialize(ref err) => Some(err),
-            Self::NewSeed(ref err) => Some(err),
-            Self::Urandom(ref err) => Some(err),
+            Self::Argument(err) => Some(err),
+            Self::Initialize(err) => Some(err),
+            Self::NewSeed(err) => Some(err),
+            Self::Urandom(err) => Some(err),
         }
     }
 }

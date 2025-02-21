@@ -174,10 +174,9 @@ impl Integer {
                 let x = interp.convert(self);
                 let coerced = numeric::coerce(interp, x, denominator)?;
                 match coerced {
-                    Coercion::Float(_, denom) if denom == 0.0 => {
+                    Coercion::Float(_, 0.0) | Coercion::Integer(_, 0) => {
                         Err(ZeroDivisionError::with_message("divided by 0").into())
                     }
-                    Coercion::Integer(_, 0) => Err(ZeroDivisionError::with_message("divided by 0").into()),
                     Coercion::Float(numer, denom) => Ok((numer / denom).into()),
                     Coercion::Integer(numer, denom) if numer < 0 && (numer % denom) != 0 => {
                         Ok(((numer / denom) - 1).into())

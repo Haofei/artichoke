@@ -337,7 +337,7 @@ fn int_pair_to_real_exclusive(mut a: u32, mut b: u32) -> f64 {
 #[expect(clippy::cast_precision_loss, reason = "MRI routine")]
 fn int_pair_to_real_inclusive(a: u32, b: u32) -> f64 {
     const MANTISSA_DIGITS: i32 = 53;
-    const M: u128 = 1 << MANTISSA_DIGITS | 1;
+    const M: u128 = (1 << MANTISSA_DIGITS) | 1;
     let x = (u128::from(a) << 32) | u128::from(b);
     let r = ((x * M) >> 64) as u64 as f64;
     libm::ldexp(r, -MANTISSA_DIGITS)

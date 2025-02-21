@@ -14,7 +14,6 @@ unsafe extern "C" fn mrb_intern(mrb: *mut sys::mrb_state, name: *const c_char, l
     let bytes = bytes.to_vec();
     unwrap_interpreter!(mrb, to => guard, or_else = 0);
     let sym = guard.intern_bytes(bytes);
-    let sym = sym.map(u32::from);
     sym.unwrap_or_default()
 }
 
@@ -26,7 +25,6 @@ unsafe extern "C" fn mrb_intern_static(mrb: *mut sys::mrb_state, name: *const c_
     let bytes = slice::from_raw_parts::<'static, _>(name.cast::<u8>(), len);
     unwrap_interpreter!(mrb, to => guard, or_else = 0);
     let sym = guard.intern_bytes(bytes);
-    let sym = sym.map(u32::from);
     sym.unwrap_or_default()
 }
 
@@ -39,7 +37,6 @@ unsafe extern "C" fn mrb_intern_cstr(mrb: *mut sys::mrb_state, name: *const c_ch
     let bytes = string.to_bytes_with_nul().to_vec();
     unwrap_interpreter!(mrb, to => guard, or_else = 0);
     let sym = guard.intern_bytes_with_trailing_nul(bytes);
-    let sym = sym.map(u32::from);
     sym.unwrap_or_default()
 }
 
@@ -52,7 +49,6 @@ unsafe extern "C" fn mrb_intern_str(mrb: *mut sys::mrb_state, name: sys::mrb_val
     let name = Value::from(name);
     if let Ok(bytes) = name.try_convert_into_mut::<Vec<u8>>(&mut guard) {
         let sym = guard.intern_bytes(bytes);
-        let sym = sym.map(u32::from);
         sym.unwrap_or_default()
     } else {
         0
