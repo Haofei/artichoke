@@ -99,7 +99,7 @@ jobs:
           repository: artichoke/spec-state
           path: spec-state
           ssh-key: ${{ secrets.SPEC_STATE_SSH_DEPLOY_PRIVATE_KEY }}
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Copy spec-state reports
         run: |
