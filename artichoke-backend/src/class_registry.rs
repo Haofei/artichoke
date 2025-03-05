@@ -37,11 +37,10 @@ impl ClassRegistry for Artichoke {
     {
         let state = self.state.as_deref().ok_or_else(InterpreterExtractError::new)?;
         let spec = state.classes.get::<T>();
-        let rclass = if let Some(spec) = spec {
-            spec.rclass()
-        } else {
+        let Some(spec) = spec else {
             return Ok(None);
         };
+        let rclass = spec.rclass();
         let value_class = unsafe {
             self.with_ffi_boundary(|mrb| {
                 if let Some(mut rclass) = rclass.resolve(mrb) {
@@ -61,15 +60,12 @@ impl ClassRegistry for Artichoke {
     {
         let state = self.state.as_deref().ok_or_else(InterpreterExtractError::new)?;
         let spec = state.classes.get::<T>();
-        let rclass = if let Some(spec) = spec {
-            spec.rclass()
-        } else {
+        let Some(spec) = spec else {
             return Ok(None);
         };
+        let rclass = spec.rclass();
         let args = args.iter().map(Value::inner).collect::<Vec<_>>();
-        let arglen = if let Ok(len) = sys::mrb_int::try_from(args.len()) {
-            len
-        } else {
+        let Ok(arglen) = sys::mrb_int::try_from(args.len()) else {
             return Ok(None);
         };
         let instance = unsafe {

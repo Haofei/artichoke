@@ -37,19 +37,16 @@ impl ModuleRegistry for Artichoke {
     {
         let state = self.state.as_deref().ok_or_else(InterpreterExtractError::new)?;
         let spec = state.modules.get::<T>();
-        let spec = if let Some(spec) = spec {
-            spec
-        } else {
+        let Some(spec) = spec else {
             return Ok(None);
         };
         let rclass = spec.rclass();
         let rclass = unsafe { self.with_ffi_boundary(|mrb| rclass.resolve(mrb))? };
-        if let Some(mut rclass) = rclass {
-            let module = unsafe { sys::mrb_sys_module_value(rclass.as_mut()) };
-            let module = Value::from(module);
-            Ok(Some(module))
-        } else {
-            Ok(None)
-        }
+        let Some(mut rclass) = rclass else {
+            return Ok(None);
+        };
+        let module = unsafe { sys::mrb_sys_module_value(rclass.as_mut()) };
+        let module = Value::from(module);
+        Ok(Some(module))
     }
 }

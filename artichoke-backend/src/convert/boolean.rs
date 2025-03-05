@@ -20,11 +20,10 @@ impl Convert<bool, Value> for Artichoke {
 
 impl Convert<Option<bool>, Value> for Artichoke {
     fn convert(&self, value: Option<bool>) -> Value {
-        if let Some(value) = value {
-            self.convert(value)
-        } else {
-            Value::nil()
-        }
+        let Some(value) = value else {
+            return Value::nil();
+        };
+        self.convert(value)
     }
 }
 
@@ -32,18 +31,17 @@ impl TryConvert<Value, bool> for Artichoke {
     type Error = Error;
 
     fn try_convert(&self, value: Value) -> Result<bool, Self::Error> {
-        if let Ruby::Bool = value.ruby_type() {
-            let inner = value.inner();
-            if sys::mrb_sys_value_is_true(inner) {
-                Ok(true)
-            } else if sys::mrb_sys_value_is_false(inner) {
-                Ok(false)
-            } else {
-                // This branch is unreachable because `Ruby::Bool` typed values
-                // are guaranteed to be either true or false.
-                Err(UnboxRubyError::new(&value, Rust::Bool).into())
-            }
+        let Ruby::Bool = value.ruby_type() else {
+            return Err(UnboxRubyError::new(&value, Rust::Bool).into());
+        };
+        let inner = value.inner();
+        if sys::mrb_sys_value_is_true(inner) {
+            Ok(true)
+        } else if sys::mrb_sys_value_is_false(inner) {
+            Ok(false)
         } else {
+            // This branch is unreachable because `Ruby::Bool` typed values
+            // are guaranteed to be either true or false.
             Err(UnboxRubyError::new(&value, Rust::Bool).into())
         }
     }

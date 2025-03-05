@@ -127,12 +127,10 @@ mod tests {
             _slf: sys::mrb_value,
         ) -> sys::mrb_value {
             unwrap_interpreter!(mrb, to => guard);
-            let result = if let Ok(value) = guard.eval(b"__FILE__") {
-                value
-            } else {
-                Value::nil()
+            let Ok(value) = guard.eval(b"__FILE__") else {
+                return Value::nil().inner();
             };
-            result.inner()
+            value.inner()
         }
 
         impl File for NestedEval {

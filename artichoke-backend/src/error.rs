@@ -92,45 +92,45 @@ where
     // Ensure the Artichoke `State` is moved back into the `mrb_state`.
     drop(guard);
 
-    if let Some(exc) = exc {
+    let Some(exc) = exc else {
+        // Being unable to turn the given exception into an `mrb_value` is a bug, so
+        // log loudly to stderr and attempt to fallback to a runtime error.
+        emit_fatal_warning!("Unable to raise exception: {:?}", exception);
+
         // Any non-`Copy` objects that we haven't cleaned up at this point will
         // leak, so drop everything.
         drop(exception);
 
-        // `mrb_exc_raise` will call longjmp which will unwind the stack.
+        // `mrb_sys_raise` will call longjmp which will unwind the stack.
         //
         // SAFETY: all remaining live objects are `Copy` and the `mrb_state` is
         // valid.
         unsafe {
-            sys::mrb_exc_raise(mrb, exc);
+            sys::mrb_sys_raise(mrb, RUNTIME_ERROR_CSTR.as_ptr(), UNABLE_TO_RAISE_MESSAGE.as_ptr());
         }
 
-        // SAFETY: This line is unreachable because `raise` will unwind the
-        // stack with `longjmp` when calling `sys::mrb_exc_raise` in the
-        // preceding line.
+        // SAFETY: This line is unreachable because `raise` will unwind the stack
+        // with `longjmp` when calling `sys::mrb_exc_raise` in the preceding line.
         unsafe {
             hint::unreachable_unchecked();
         }
-    }
-
-    // Being unable to turn the given exception into an `mrb_value` is a bug, so
-    // log loudly to stderr and attempt to fallback to a runtime error.
-    emit_fatal_warning!("Unable to raise exception: {:?}", exception);
+    };
 
     // Any non-`Copy` objects that we haven't cleaned up at this point will
     // leak, so drop everything.
     drop(exception);
 
-    // `mrb_sys_raise` will call longjmp which will unwind the stack.
+    // `mrb_exc_raise` will call longjmp which will unwind the stack.
     //
     // SAFETY: all remaining live objects are `Copy` and the `mrb_state` is
     // valid.
     unsafe {
-        sys::mrb_sys_raise(mrb, RUNTIME_ERROR_CSTR.as_ptr(), UNABLE_TO_RAISE_MESSAGE.as_ptr());
+        sys::mrb_exc_raise(mrb, exc);
     }
 
-    // SAFETY: This line is unreachable because `raise` will unwind the stack
-    // with `longjmp` when calling `sys::mrb_exc_raise` in the preceding line.
+    // SAFETY: This line is unreachable because `raise` will unwind the
+    // stack with `longjmp` when calling `sys::mrb_exc_raise` in the
+    // preceding line.
     unsafe {
         hint::unreachable_unchecked();
     }

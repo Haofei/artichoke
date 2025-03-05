@@ -25,11 +25,10 @@ impl Debug for Artichoke {
         // SAFETY: `mrb_obj_classname` requires an initialized mruby interpreter
         // which is guaranteed by the `Artichoke` type.
         let class = unsafe { self.with_ffi_boundary(|mrb| sys::mrb_obj_classname(mrb, value.inner())) };
-        let class = if let Ok(class) = class {
-            unsafe { CStr::from_ptr(class) }
-        } else {
-            c""
+        let Ok(class) = class else {
+            return "";
         };
+        let class = unsafe { CStr::from_ptr(class) };
         class.to_str().unwrap_or_default()
     }
 }

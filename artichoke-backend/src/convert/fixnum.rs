@@ -31,14 +31,14 @@ impl TryConvert<u64, Value> for Artichoke {
     type Error = Error;
 
     fn try_convert(&self, value: u64) -> Result<Value, Self::Error> {
+        let Ok(value) = i64::try_from(value) else {
+            return Err(BoxIntoRubyError::new(Rust::UnsignedInt, Ruby::Fixnum).into());
+        };
         // SAFETY: `i64` Ruby Values do not need to be protected because they
         // are immediates and do not live on the mruby heap.
-        if let Ok(value) = i64::try_from(value) {
-            let fixnum = unsafe { sys::mrb_sys_fixnum_value(value) };
-            Ok(Value::from(fixnum))
-        } else {
-            Err(BoxIntoRubyError::new(Rust::UnsignedInt, Ruby::Fixnum).into())
-        }
+        // `mrb_sys_fixnum_value` is a safe ffi call when given an `i64`.
+        let fixnum = unsafe { sys::mrb_sys_fixnum_value(value) };
+        Ok(Value::from(fixnum))
     }
 }
 
@@ -46,14 +46,14 @@ impl TryConvert<usize, Value> for Artichoke {
     type Error = Error;
 
     fn try_convert(&self, value: usize) -> Result<Value, Self::Error> {
+        let Ok(value) = i64::try_from(value) else {
+            return Err(BoxIntoRubyError::new(Rust::UnsignedInt, Ruby::Fixnum).into());
+        };
         // SAFETY: `i64` Ruby Values do not need to be protected because they
         // are immediates and do not live on the mruby heap.
-        if let Ok(value) = i64::try_from(value) {
-            let fixnum = unsafe { sys::mrb_sys_fixnum_value(value) };
-            Ok(Value::from(fixnum))
-        } else {
-            Err(BoxIntoRubyError::new(Rust::UnsignedInt, Ruby::Fixnum).into())
-        }
+        // `mrb_sys_fixnum_value` is a safe ffi call when given an `i64`.
+        let fixnum = unsafe { sys::mrb_sys_fixnum_value(value) };
+        Ok(Value::from(fixnum))
     }
 }
 
@@ -82,14 +82,14 @@ impl TryConvert<isize, Value> for Artichoke {
     type Error = Error;
 
     fn try_convert(&self, value: isize) -> Result<Value, Self::Error> {
+        let Ok(value) = i64::try_from(value) else {
+            return Err(BoxIntoRubyError::new(Rust::SignedInt, Ruby::Fixnum).into());
+        };
         // SAFETY: `i64` Ruby Values do not need to be protected because they
         // are immediates and do not live on the mruby heap.
-        if let Ok(value) = i64::try_from(value) {
-            let fixnum = unsafe { sys::mrb_sys_fixnum_value(value) };
-            Ok(Value::from(fixnum))
-        } else {
-            Err(BoxIntoRubyError::new(Rust::SignedInt, Ruby::Fixnum).into())
-        }
+        // `mrb_sys_fixnum_value` is a safe ffi call when given an `i64`.
+        let fixnum = unsafe { sys::mrb_sys_fixnum_value(value) };
+        Ok(Value::from(fixnum))
     }
 }
 
@@ -98,6 +98,7 @@ impl Convert<i64, Value> for Artichoke {
     fn convert(&self, value: i64) -> Value {
         // SAFETY: `i64` Ruby Values do not need to be protected because they
         // are immediates and do not live on the mruby heap.
+        // `mrb_sys_fixnum_value` is a safe ffi call when given an `i64`.
         let fixnum = unsafe { sys::mrb_sys_fixnum_value(value) };
         Value::from(fixnum)
     }
@@ -107,12 +108,12 @@ impl TryConvert<Value, i64> for Artichoke {
     type Error = Error;
 
     fn try_convert(&self, value: Value) -> Result<i64, Self::Error> {
-        if let Ruby::Fixnum = value.ruby_type() {
-            let inner = value.inner();
-            Ok(unsafe { sys::mrb_sys_fixnum_to_cint(inner) })
-        } else {
-            Err(UnboxRubyError::new(&value, Rust::SignedInt).into())
-        }
+        let Ruby::Fixnum = value.ruby_type() else {
+            return Err(UnboxRubyError::new(&value, Rust::SignedInt).into());
+        };
+        let inner = value.inner();
+        // SAFETY: value is validated to have integer type tag.
+        Ok(unsafe { sys::mrb_sys_fixnum_to_cint(inner) })
     }
 }
 
@@ -120,14 +121,13 @@ impl TryConvert<Value, u32> for Artichoke {
     type Error = Error;
 
     fn try_convert(&self, value: Value) -> Result<u32, Self::Error> {
-        if let Ruby::Fixnum = value.ruby_type() {
-            let inner = value.inner();
-            let num = unsafe { sys::mrb_sys_fixnum_to_cint(inner) };
-            let num = u32::try_from(num).map_err(|_| UnboxRubyError::new(&value, Rust::UnsignedInt))?;
-            Ok(num)
-        } else {
-            Err(UnboxRubyError::new(&value, Rust::SignedInt).into())
-        }
+        let Ruby::Fixnum = value.ruby_type() else {
+            return Err(UnboxRubyError::new(&value, Rust::SignedInt).into());
+        };
+        let inner = value.inner();
+        let num = unsafe { sys::mrb_sys_fixnum_to_cint(inner) };
+        let num = u32::try_from(num).map_err(|_| UnboxRubyError::new(&value, Rust::UnsignedInt))?;
+        Ok(num)
     }
 }
 
@@ -135,14 +135,13 @@ impl TryConvert<Value, usize> for Artichoke {
     type Error = Error;
 
     fn try_convert(&self, value: Value) -> Result<usize, Self::Error> {
-        if let Ruby::Fixnum = value.ruby_type() {
-            let inner = value.inner();
-            let num = unsafe { sys::mrb_sys_fixnum_to_cint(inner) };
-            let num = usize::try_from(num).map_err(|_| UnboxRubyError::new(&value, Rust::UnsignedInt))?;
-            Ok(num)
-        } else {
-            Err(UnboxRubyError::new(&value, Rust::SignedInt).into())
-        }
+        let Ruby::Fixnum = value.ruby_type() else {
+            return Err(UnboxRubyError::new(&value, Rust::SignedInt).into());
+        };
+        let inner = value.inner();
+        let num = unsafe { sys::mrb_sys_fixnum_to_cint(inner) };
+        let num = usize::try_from(num).map_err(|_| UnboxRubyError::new(&value, Rust::UnsignedInt))?;
+        Ok(num)
     }
 }
 

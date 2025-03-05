@@ -126,9 +126,7 @@ unsafe extern "C-unwind" fn mrb_str_index(
 ) -> sys::mrb_int {
     unwrap_interpreter!(mrb, to => guard, or_else = -1);
     let mut value = s.into();
-    let string = if let Ok(string) = String::unbox_from_value(&mut value, &mut guard) {
-        string
-    } else {
+    let Ok(string) = String::unbox_from_value(&mut value, &mut guard) else {
         return -1;
     };
 
@@ -152,14 +150,10 @@ unsafe extern "C-unwind" fn mrb_str_index(
     if offset < 0 {
         offset += length;
     }
-    let offset = if let Ok(offset) = usize::try_from(offset) {
-        offset
-    } else {
+    let Ok(offset) = usize::try_from(offset) else {
         return -1;
     };
-    let haystack = if let Some(haystack) = string.get(offset..) {
-        haystack
-    } else {
+    let Some(haystack) = string.get(offset..) else {
         return -1;
     };
     let needle = slice::from_raw_parts(sptr.cast::<u8>(), usize::try_from(slen).unwrap_or(0));
@@ -227,14 +221,10 @@ unsafe extern "C-unwind" fn mrb_str_resize(
 
     unwrap_interpreter!(mrb, to => guard, or_else = s);
     let mut value = s.into();
-    let mut string = if let Ok(string) = String::unbox_from_value(&mut value, &mut guard) {
-        string
-    } else {
+    let Ok(mut string) = String::unbox_from_value(&mut value, &mut guard) else {
         return s;
     };
-    let len = if let Ok(len) = usize::try_from(len) {
-        len
-    } else {
+    let Ok(len) = usize::try_from(len) else {
         return s;
     };
     // SAFETY: The string is repacked before any intervening uses of `interp`
@@ -294,14 +284,10 @@ unsafe extern "C-unwind" fn mrb_str_plus(
     let mut a = Value::from(a);
     let mut b = Value::from(b);
 
-    let a = if let Ok(a) = String::unbox_from_value(&mut a, &mut guard) {
-        a
-    } else {
+    let Ok(a) = String::unbox_from_value(&mut a, &mut guard) else {
         return Value::nil().into();
     };
-    let b = if let Ok(b) = String::unbox_from_value(&mut b, &mut guard) {
-        b
-    } else {
+    let Ok(b) = String::unbox_from_value(&mut b, &mut guard) else {
         return Value::nil().into();
     };
 
@@ -327,14 +313,10 @@ unsafe extern "C-unwind" fn mrb_str_cmp(
     let mut a = Value::from(str1);
     let mut b = Value::from(str2);
 
-    let a = if let Ok(a) = String::unbox_from_value(&mut a, &mut guard) {
-        a
-    } else {
+    let Ok(a) = String::unbox_from_value(&mut a, &mut guard) else {
         return -1;
     };
-    let b = if let Ok(b) = String::unbox_from_value(&mut b, &mut guard) {
-        b
-    } else {
+    let Ok(b) = String::unbox_from_value(&mut b, &mut guard) else {
         return -1;
     };
 
@@ -354,14 +336,10 @@ unsafe extern "C-unwind" fn mrb_str_equal(
     let mut a = Value::from(str1);
     let mut b = Value::from(str2);
 
-    let a = if let Ok(a) = String::unbox_from_value(&mut a, &mut guard) {
-        a
-    } else {
+    let Ok(a) = String::unbox_from_value(&mut a, &mut guard) else {
         return false;
     };
-    let b = if let Ok(b) = String::unbox_from_value(&mut b, &mut guard) {
-        b
-    } else {
+    let Ok(b) = String::unbox_from_value(&mut b, &mut guard) else {
         return false;
     };
 
@@ -394,19 +372,20 @@ unsafe extern "C-unwind" fn mrb_str_dup(mrb: *mut sys::mrb_state, s: sys::mrb_va
     let basic = sys::mrb_sys_basic_ptr(s).cast::<sys::RString>();
     let class = (*basic).c;
 
-    if let Ok(string) = String::unbox_from_value(&mut string, &mut guard) {
-        let dup = string.clone();
-        if let Ok(value) = String::alloc_value(dup, &mut guard) {
-            let value = value.inner();
+    let Ok(string) = String::unbox_from_value(&mut string, &mut guard) else {
+        return Value::nil().into();
+    };
+    let dup = string.clone();
+    let Ok(value) = String::alloc_value(dup, &mut guard) else {
+        return Value::nil().into();
+    };
+    let value = value.inner();
 
-            // dup'd strings keep the class of the source `String`.
-            let dup_basic = sys::mrb_sys_basic_ptr(value).cast::<sys::RString>();
-            (*dup_basic).c = class;
+    // dup'd strings keep the class of the source `String`.
+    let dup_basic = sys::mrb_sys_basic_ptr(value).cast::<sys::RString>();
+    (*dup_basic).c = class;
 
-            return value;
-        }
-    }
-    Value::nil().into()
+    value
 }
 
 // ```c
@@ -425,9 +404,7 @@ unsafe extern "C-unwind" fn mrb_str_substr(
     unwrap_interpreter!(mrb, to => guard);
 
     let mut string = Value::from(s);
-    let string = if let Ok(string) = String::unbox_from_value(&mut string, &mut guard) {
-        string
-    } else {
+    let Ok(string) = String::unbox_from_value(&mut string, &mut guard) else {
         return Value::nil().into();
     };
 
@@ -438,20 +415,18 @@ unsafe extern "C-unwind" fn mrb_str_substr(
             .checked_neg()
             .and_then(|offset| usize::try_from(offset).ok())
             .and_then(|offset| offset.checked_sub(string.len()));
-        if let Some(offset) = offset {
-            offset
-        } else {
+        let Some(offset) = offset else {
             return Value::nil().into();
-        }
+        };
+        offset
     };
 
     // FIXME: mruby treats this as a character offset, not a byte offset.
-    if let Some(slice) = string.get(offset..) {
-        let substr = String::with_bytes_and_encoding(slice.to_vec(), string.encoding());
-        String::alloc_value(substr, &mut guard).unwrap_or_default().into()
-    } else {
-        Value::nil().into()
-    }
+    let Some(slice) = string.get(offset..) else {
+        return Value::nil().into();
+    };
+    let substr = String::with_bytes_and_encoding(slice.to_vec(), string.encoding());
+    String::alloc_value(substr, &mut guard).unwrap_or_default().into()
 }
 
 // ```c
@@ -483,14 +458,12 @@ unsafe extern "C-unwind" fn mrb_string_value_cstr(
 ) -> *const c_char {
     unwrap_interpreter!(mrb, to => guard, or_else = ptr::null());
     let mut s = Value::from(*ptr);
-    let mut string = if let Ok(string) = String::unbox_from_value(&mut s, &mut guard) {
-        if let Some(b'\0') = string.last() {
-            return string.as_ptr().cast();
-        }
-        string
-    } else {
+    let Ok(mut string) = String::unbox_from_value(&mut s, &mut guard) else {
         return ptr::null();
     };
+    if let Some(b'\0') = string.last() {
+        return string.as_ptr().cast();
+    }
     // SAFETY: The string is repacked before any intervening uses of `interp`
     // which means no mruby heap allocations can occur.
     let string_mut = string.as_inner_mut();
@@ -512,14 +485,12 @@ unsafe extern "C-unwind" fn mrb_string_value_cstr(
 unsafe extern "C-unwind" fn mrb_string_cstr(mrb: *mut sys::mrb_state, s: sys::mrb_value) -> *const c_char {
     unwrap_interpreter!(mrb, to => guard, or_else = ptr::null());
     let mut s = Value::from(s);
-    let mut string = if let Ok(string) = String::unbox_from_value(&mut s, &mut guard) {
-        if let Some(b'\0') = string.last() {
-            return string.as_ptr().cast();
-        }
-        string
-    } else {
+    let Ok(mut string) = String::unbox_from_value(&mut s, &mut guard) else {
         return ptr::null();
     };
+    if let Some(b'\0') = string.last() {
+        return string.as_ptr().cast();
+    }
     // SAFETY: The string is repacked before any intervening uses of `interp`
     // which means no mruby heap allocations can occur.
     let string_mut = string.as_inner_mut();
@@ -550,29 +521,28 @@ unsafe extern "C-unwind" fn mrb_str_to_integer(
 ) -> sys::mrb_value {
     unwrap_interpreter!(mrb, to => guard);
     let mut s = Value::from(s);
-    let s = if let Ok(s) = String::unbox_from_value(&mut s, &mut guard) {
-        s
-    } else if badcheck {
-        let err = ArgumentError::with_message("not a string");
-        error::raise(guard, err);
-    } else {
+    let Ok(s) = String::unbox_from_value(&mut s, &mut guard) else {
+        if badcheck {
+            let err = ArgumentError::with_message("not a string");
+            error::raise(guard, err);
+        }
         return guard.convert(0_i64).into();
     };
-    let num = if let Ok(s) = str::from_utf8(s.as_slice()) {
-        if let Ok(num) = s.parse::<i64>() {
-            num
-        } else if badcheck {
+    let Ok(s) = str::from_utf8(s.as_slice()) else {
+        if badcheck {
             let err = ArgumentError::with_message("invalid number");
             error::raise(guard, err);
-        } else {
-            return guard.convert(0_i64).into();
         }
-    } else if badcheck {
-        let err = ArgumentError::with_message("invalid number");
-        error::raise(guard, err);
-    } else {
+        return guard.convert(-1_i64).into();
+    };
+    let Ok(num) = s.parse::<i64>() else {
+        if badcheck {
+            let err = ArgumentError::with_message("invalid number");
+            error::raise(guard, err);
+        }
         return guard.convert(0_i64).into();
     };
+
     let radix = match u32::try_from(base) {
         Ok(base) if (2..=36).contains(&base) => base,
         Ok(_) | Err(_) => {
@@ -580,6 +550,7 @@ unsafe extern "C-unwind" fn mrb_str_to_integer(
             error::raise(guard, err);
         }
     };
+
     let mut result = vec![];
     let mut x = num;
 
@@ -614,29 +585,28 @@ unsafe extern "C-unwind" fn mrb_str_to_dbl(
 ) -> c_double {
     unwrap_interpreter!(mrb, to => guard, or_else = 0.0);
     let mut s = Value::from(s);
-    let s = if let Ok(s) = String::unbox_from_value(&mut s, &mut guard) {
-        s
-    } else if badcheck {
-        let err = ArgumentError::with_message("not a string");
-        error::raise(guard, err);
-    } else {
+    let Ok(s) = String::unbox_from_value(&mut s, &mut guard) else {
+        if badcheck {
+            let err = ArgumentError::with_message("not a string");
+            error::raise(guard, err);
+        }
         return 0.0;
     };
-    if let Ok(s) = str::from_utf8(s.as_slice()) {
-        if let Ok(num) = s.parse::<c_double>() {
-            num
-        } else if badcheck {
+    let Ok(s) = str::from_utf8(s.as_slice()) else {
+        if badcheck {
             let err = ArgumentError::with_message("invalid number");
             error::raise(guard, err);
-        } else {
-            0.0
         }
-    } else if badcheck {
-        let err = ArgumentError::with_message("invalid number");
-        error::raise(guard, err);
-    } else {
-        0.0
-    }
+        return 0.0;
+    };
+    let Ok(num) = s.parse::<c_double>() else {
+        if badcheck {
+            let err = ArgumentError::with_message("invalid number");
+            error::raise(guard, err);
+        }
+        return 0.0;
+    };
+    num
 }
 
 // ```c
@@ -651,20 +621,19 @@ unsafe extern "C-unwind" fn mrb_str_cat(
 ) -> sys::mrb_value {
     unwrap_interpreter!(mrb, to => guard, or_else = s);
     let mut s = Value::from(s);
-    if let Ok(mut string) = String::unbox_from_value(&mut s, &mut guard) {
-        let slice = slice::from_raw_parts(ptr.cast::<u8>(), len);
+    let Ok(mut string) = String::unbox_from_value(&mut s, &mut guard) else {
+        return s.inner();
+    };
+    let slice = slice::from_raw_parts(ptr.cast::<u8>(), len);
 
-        // SAFETY: The string is repacked before any intervening uses of
-        // `interp` which means no mruby heap allocations can occur.
-        let string_mut = string.as_inner_mut();
-        string_mut.extend_from_slice(slice);
-        let inner = string.take();
-        let value = String::box_into_value(inner, s, &mut guard).expect("String reboxing should not fail");
+    // SAFETY: The string is repacked before any intervening uses of
+    // `interp` which means no mruby heap allocations can occur.
+    let string_mut = string.as_inner_mut();
+    string_mut.extend_from_slice(slice);
+    let inner = string.take();
+    let value = String::box_into_value(inner, s, &mut guard).expect("String reboxing should not fail");
 
-        value.inner()
-    } else {
-        s.inner()
-    }
+    value.inner()
 }
 
 // ```c
@@ -688,15 +657,12 @@ unsafe extern "C-unwind" fn mrb_str_cat(
 unsafe extern "C-unwind" fn mrb_str_hash(mrb: *mut sys::mrb_state, s: sys::mrb_value) -> u32 {
     unwrap_interpreter!(mrb, to => guard, or_else = 0);
     let mut s = Value::from(s);
-    let mut hasher = if let Ok(global_build_hasher) = guard.global_build_hasher() {
-        global_build_hasher.build_hasher()
-    } else {
+    let Ok(global_build_hasher) = guard.global_build_hasher() else {
         return 0;
     };
+    let mut hasher = global_build_hasher.build_hasher();
 
-    let s = if let Ok(s) = String::unbox_from_value(&mut s, &mut guard) {
-        s
-    } else {
+    let Ok(s) = String::unbox_from_value(&mut s, &mut guard) else {
         return 0;
     };
     s.as_slice().hash(&mut hasher);

@@ -18,12 +18,14 @@ impl TryConvert<Value, f64> for Artichoke {
     type Error = Error;
 
     fn try_convert(&self, value: Value) -> Result<f64, Self::Error> {
-        if let Ruby::Float = value.ruby_type() {
-            let value = value.inner();
-            Ok(unsafe { sys::mrb_sys_float_to_cdouble(value) })
-        } else {
-            Err(UnboxRubyError::new(&value, Rust::Float).into())
-        }
+        let Ruby::Float = value.ruby_type() else {
+            return Err(UnboxRubyError::new(&value, Rust::Float).into());
+        };
+        let value = value.inner();
+        // SAFETY: `f64` Ruby Values do not need to be protected because they
+        // are immediates and do not live on the mruby heap.
+        // `mrb_sys_float_to_cdouble` is a safe ffi call when given an `f64`.
+        Ok(unsafe { sys::mrb_sys_float_to_cdouble(value) })
     }
 }
 

@@ -282,11 +282,10 @@ pub fn check_to_int(interp: &mut Artichoke, value: Value) -> Result<Value, Error
         return Ok(value);
     }
     let value = try_to_int(interp, value, "to_int", ConvertOnError::ReturnNil)?;
-    if let Ruby::Fixnum = value.ruby_type() {
-        Ok(value)
-    } else {
-        Ok(Value::nil())
-    }
+    let Ruby::Fixnum = value.ruby_type() else {
+        return Ok(Value::nil());
+    };
+    Ok(value)
 }
 
 /// Fallible coercion of the given value to a Ruby `Integer` via `#to_i`.
