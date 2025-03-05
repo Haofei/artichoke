@@ -28,7 +28,7 @@ pub fn init(interp: &mut Artichoke) -> InitializeResult<()> {
     Ok(())
 }
 
-unsafe extern "C" fn symbol_all_symbols(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn symbol_all_symbols(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let result = trampoline::all_symbols(&mut guard);
@@ -41,7 +41,7 @@ unsafe extern "C" fn symbol_all_symbols(mrb: *mut sys::mrb_state, _slf: sys::mrb
     }
 }
 
-unsafe extern "C" fn symbol_equal_equal(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn symbol_equal_equal(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let other = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let sym = Value::from(slf);
@@ -56,7 +56,7 @@ unsafe extern "C" fn symbol_equal_equal(mrb: *mut sys::mrb_state, slf: sys::mrb_
     }
 }
 
-unsafe extern "C" fn symbol_ascii_casecmp(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn symbol_ascii_casecmp(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let other = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let sym = Value::from(slf);
@@ -71,7 +71,7 @@ unsafe extern "C" fn symbol_ascii_casecmp(mrb: *mut sys::mrb_state, slf: sys::mr
     }
 }
 
-unsafe extern "C" fn symbol_unicode_casecmp(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn symbol_unicode_casecmp(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let other = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let sym = Value::from(slf);
@@ -86,7 +86,7 @@ unsafe extern "C" fn symbol_unicode_casecmp(mrb: *mut sys::mrb_state, slf: sys::
     }
 }
 
-unsafe extern "C" fn symbol_empty(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn symbol_empty(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let sym = Value::from(slf);
@@ -100,7 +100,7 @@ unsafe extern "C" fn symbol_empty(mrb: *mut sys::mrb_state, slf: sys::mrb_value)
     }
 }
 
-unsafe extern "C" fn symbol_inspect(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn symbol_inspect(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -114,7 +114,7 @@ unsafe extern "C" fn symbol_inspect(mrb: *mut sys::mrb_state, slf: sys::mrb_valu
     }
 }
 
-unsafe extern "C" fn symbol_length(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn symbol_length(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let sym = Value::from(slf);
@@ -128,7 +128,7 @@ unsafe extern "C" fn symbol_length(mrb: *mut sys::mrb_state, slf: sys::mrb_value
     }
 }
 
-unsafe extern "C" fn symbol_to_s(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn symbol_to_s(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let sym = Value::from(slf);

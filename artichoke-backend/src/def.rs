@@ -48,10 +48,7 @@ where
     // declared as `Option<NonNull<c_void>>` which is FFI safe, but this function
     // is eventually passed into a bindgen-generated mruby struct, which expects
     // the `*mut c_void` argument.
-    if let Some(data) = NonNull::new(data) {
-        // Only attempt to free if we are given a non-null pointer.
-        T::free(data.as_ptr());
-    } else {
+    let Some(data) = NonNull::new(data) else {
         // If we enter this branch, we have almost certainly encountered a bug.
         // Rather than attempt a free and virtually guaranteed segfault, log
         // loudly and short-circuit; a leak is better than a crash.
@@ -65,7 +62,11 @@ where
             "Received null pointer in box_unbox_free::<{}>",
             T::RUBY_TYPE,
         );
-    }
+        return;
+    };
+    // Only attempt to free if we are given a non-null pointer.
+    // SAFETY: this function may never unwind due to trait implementer contract.
+    T::free(data.as_ptr());
 }
 
 #[cfg(test)]
@@ -102,7 +103,7 @@ mod free_test {
 ///
 /// To extract method arguments, use [`mrb_get_args!`] and the supplied
 /// interpreter.
-pub type Method = unsafe extern "C" fn(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value;
+pub type Method = unsafe extern "C-unwind" fn(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct ClassScope {
@@ -520,7 +521,7 @@ mod tests {
         #[derive(Debug)]
         struct Module;
 
-        extern "C" fn value(_mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+        extern "C-unwind" fn value(_mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
             unsafe {
                 match slf.tt {
                     sys::mrb_vtype::MRB_TT_CLASS => sys::mrb_sys_fixnum_value(8),

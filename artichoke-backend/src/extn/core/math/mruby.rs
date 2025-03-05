@@ -64,7 +64,7 @@ pub fn init(interp: &mut Artichoke) -> InitializeResult<()> {
     Ok(())
 }
 
-unsafe extern "C" fn math_acos(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_acos(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -78,7 +78,7 @@ unsafe extern "C" fn math_acos(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -
     }
 }
 
-unsafe extern "C" fn math_acosh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_acosh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -92,7 +92,7 @@ unsafe extern "C" fn math_acosh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) 
     }
 }
 
-unsafe extern "C" fn math_asin(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_asin(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -106,7 +106,7 @@ unsafe extern "C" fn math_asin(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -
     }
 }
 
-unsafe extern "C" fn math_asinh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_asinh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -120,7 +120,7 @@ unsafe extern "C" fn math_asinh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) 
     }
 }
 
-unsafe extern "C" fn math_atan(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_atan(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -134,7 +134,7 @@ unsafe extern "C" fn math_atan(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -
     }
 }
 
-unsafe extern "C" fn math_atan2(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_atan2(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let (value, other) = mrb_get_args!(mrb, required = 2);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -149,7 +149,7 @@ unsafe extern "C" fn math_atan2(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) 
     }
 }
 
-unsafe extern "C" fn math_atanh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_atanh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -163,7 +163,7 @@ unsafe extern "C" fn math_atanh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) 
     }
 }
 
-unsafe extern "C" fn math_cbrt(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_cbrt(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -177,7 +177,7 @@ unsafe extern "C" fn math_cbrt(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -
     }
 }
 
-unsafe extern "C" fn math_cos(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_cos(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -191,7 +191,7 @@ unsafe extern "C" fn math_cos(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) ->
     }
 }
 
-unsafe extern "C" fn math_cosh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_cosh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -205,7 +205,7 @@ unsafe extern "C" fn math_cosh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -
     }
 }
 
-unsafe extern "C" fn math_erf(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_erf(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -219,7 +219,7 @@ unsafe extern "C" fn math_erf(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) ->
     }
 }
 
-unsafe extern "C" fn math_erfc(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_erfc(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -233,7 +233,7 @@ unsafe extern "C" fn math_erfc(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -
     }
 }
 
-unsafe extern "C" fn math_exp(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_exp(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -247,7 +247,7 @@ unsafe extern "C" fn math_exp(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) ->
     }
 }
 
-unsafe extern "C" fn math_frexp(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_frexp(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -265,7 +265,7 @@ unsafe extern "C" fn math_frexp(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) 
     }
 }
 
-unsafe extern "C" fn math_gamma(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_gamma(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -279,7 +279,7 @@ unsafe extern "C" fn math_gamma(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) 
     }
 }
 
-unsafe extern "C" fn math_hypot(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_hypot(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let (value, other) = mrb_get_args!(mrb, required = 2);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -294,7 +294,7 @@ unsafe extern "C" fn math_hypot(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) 
     }
 }
 
-unsafe extern "C" fn math_ldexp(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_ldexp(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let (fraction, exponent) = mrb_get_args!(mrb, required = 2);
     unwrap_interpreter!(mrb, to => guard);
     let fraction = Value::from(fraction);
@@ -309,7 +309,7 @@ unsafe extern "C" fn math_ldexp(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) 
     }
 }
 
-unsafe extern "C" fn math_lgamma(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_lgamma(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -327,7 +327,7 @@ unsafe extern "C" fn math_lgamma(mrb: *mut sys::mrb_state, _slf: sys::mrb_value)
     }
 }
 
-unsafe extern "C" fn math_log(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_log(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let (value, base) = mrb_get_args!(mrb, required = 1, optional = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -342,7 +342,7 @@ unsafe extern "C" fn math_log(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) ->
     }
 }
 
-unsafe extern "C" fn math_log10(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_log10(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -356,7 +356,7 @@ unsafe extern "C" fn math_log10(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) 
     }
 }
 
-unsafe extern "C" fn math_log2(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_log2(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -370,7 +370,7 @@ unsafe extern "C" fn math_log2(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -
     }
 }
 
-unsafe extern "C" fn math_sin(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_sin(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -384,7 +384,7 @@ unsafe extern "C" fn math_sin(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) ->
     }
 }
 
-unsafe extern "C" fn math_sinh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_sinh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -398,7 +398,7 @@ unsafe extern "C" fn math_sinh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -
     }
 }
 
-unsafe extern "C" fn math_sqrt(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_sqrt(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -412,7 +412,7 @@ unsafe extern "C" fn math_sqrt(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -
     }
 }
 
-unsafe extern "C" fn math_tan(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_tan(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);
@@ -426,7 +426,7 @@ unsafe extern "C" fn math_tan(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) ->
     }
 }
 
-unsafe extern "C" fn math_tanh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn math_tanh(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let value = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(value);

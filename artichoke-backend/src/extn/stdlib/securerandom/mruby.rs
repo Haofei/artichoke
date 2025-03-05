@@ -43,7 +43,10 @@ impl File for SecureRandomFile {
     }
 }
 
-unsafe extern "C" fn securerandom_alphanumeric(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn securerandom_alphanumeric(
+    mrb: *mut sys::mrb_state,
+    _slf: sys::mrb_value,
+) -> sys::mrb_value {
     let len = mrb_get_args!(mrb, optional = 1);
     unwrap_interpreter!(mrb, to => guard);
     let len = len.map(Value::from).and_then(|len| guard.convert(len));
@@ -57,7 +60,7 @@ unsafe extern "C" fn securerandom_alphanumeric(mrb: *mut sys::mrb_state, _slf: s
     }
 }
 
-unsafe extern "C" fn securerandom_base64(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn securerandom_base64(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let len = mrb_get_args!(mrb, optional = 1);
     unwrap_interpreter!(mrb, to => guard);
     let len = len.map(Value::from).and_then(|len| guard.convert(len));
@@ -71,7 +74,10 @@ unsafe extern "C" fn securerandom_base64(mrb: *mut sys::mrb_state, _slf: sys::mr
     }
 }
 
-unsafe extern "C" fn securerandom_urlsafe_base64(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn securerandom_urlsafe_base64(
+    mrb: *mut sys::mrb_state,
+    _slf: sys::mrb_value,
+) -> sys::mrb_value {
     let (len, padding) = mrb_get_args!(mrb, optional = 2);
     unwrap_interpreter!(mrb, to => guard);
     let len = len.map(Value::from).and_then(|len| guard.convert(len));
@@ -86,7 +92,7 @@ unsafe extern "C" fn securerandom_urlsafe_base64(mrb: *mut sys::mrb_state, _slf:
     }
 }
 
-unsafe extern "C" fn securerandom_hex(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn securerandom_hex(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let len = mrb_get_args!(mrb, optional = 1);
     unwrap_interpreter!(mrb, to => guard);
     let len = len.map(Value::from).and_then(|len| guard.convert(len));
@@ -100,7 +106,10 @@ unsafe extern "C" fn securerandom_hex(mrb: *mut sys::mrb_state, _slf: sys::mrb_v
     }
 }
 
-unsafe extern "C" fn securerandom_random_bytes(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn securerandom_random_bytes(
+    mrb: *mut sys::mrb_state,
+    _slf: sys::mrb_value,
+) -> sys::mrb_value {
     let len = mrb_get_args!(mrb, optional = 1);
     unwrap_interpreter!(mrb, to => guard);
     let len = len.map(Value::from).and_then(|len| guard.convert(len));
@@ -114,7 +123,10 @@ unsafe extern "C" fn securerandom_random_bytes(mrb: *mut sys::mrb_state, _slf: s
     }
 }
 
-unsafe extern "C" fn securerandom_random_number(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn securerandom_random_number(
+    mrb: *mut sys::mrb_state,
+    _slf: sys::mrb_value,
+) -> sys::mrb_value {
     let max = mrb_get_args!(mrb, optional = 1);
     unwrap_interpreter!(mrb, to => guard);
     let max = max.map(Value::from).and_then(|max| guard.convert(max));
@@ -128,7 +140,7 @@ unsafe extern "C" fn securerandom_random_number(mrb: *mut sys::mrb_state, _slf: 
     }
 }
 
-unsafe extern "C" fn securerandom_uuid(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn securerandom_uuid(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let result = trampoline::uuid(&mut guard);

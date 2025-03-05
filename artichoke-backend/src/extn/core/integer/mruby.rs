@@ -28,7 +28,7 @@ pub fn init(interp: &mut Artichoke) -> InitializeResult<()> {
     Ok(())
 }
 
-unsafe extern "C" fn integer_chr(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn integer_chr(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let encoding = mrb_get_args!(mrb, optional = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -43,7 +43,10 @@ unsafe extern "C" fn integer_chr(mrb: *mut sys::mrb_state, slf: sys::mrb_value) 
     }
 }
 
-unsafe extern "C" fn integer_element_reference(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn integer_element_reference(
+    mrb: *mut sys::mrb_state,
+    slf: sys::mrb_value,
+) -> sys::mrb_value {
     let bit = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -58,7 +61,7 @@ unsafe extern "C" fn integer_element_reference(mrb: *mut sys::mrb_state, slf: sy
     }
 }
 
-unsafe extern "C" fn integer_div(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn integer_div(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let denominator = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -73,7 +76,7 @@ unsafe extern "C" fn integer_div(mrb: *mut sys::mrb_state, slf: sys::mrb_value) 
     }
 }
 
-unsafe extern "C" fn integer_is_allbits(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn integer_is_allbits(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let mask = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -88,7 +91,7 @@ unsafe extern "C" fn integer_is_allbits(mrb: *mut sys::mrb_state, slf: sys::mrb_
     }
 }
 
-unsafe extern "C" fn integer_is_anybits(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn integer_is_anybits(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let mask = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -103,7 +106,7 @@ unsafe extern "C" fn integer_is_anybits(mrb: *mut sys::mrb_state, slf: sys::mrb_
     }
 }
 
-unsafe extern "C" fn integer_is_nobits(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn integer_is_nobits(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let mask = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -118,7 +121,7 @@ unsafe extern "C" fn integer_is_nobits(mrb: *mut sys::mrb_state, slf: sys::mrb_v
     }
 }
 
-unsafe extern "C" fn integer_size(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn integer_size(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let result = trampoline::size(&guard);
