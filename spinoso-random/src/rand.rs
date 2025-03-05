@@ -137,7 +137,7 @@ pub fn rand(rng: &mut Random, max: Max) -> Result<Rand, ArgumentError> {
             let err = ArgumentError::with_rand_max(constraint);
             Err(err)
         }
-        Max::Float(max) if max == 0.0 => {
+        Max::Float(0.0) | Max::None => {
             let number = rng.next_real();
             Ok(Rand::Float(number))
         }
@@ -153,16 +153,12 @@ pub fn rand(rng: &mut Random, max: Max) -> Result<Rand, ArgumentError> {
             let number = rng.random_range(0..max);
             Ok(Rand::Integer(number))
         }
-        Max::None => {
-            let number = rng.next_real();
-            Ok(Rand::Float(number))
-        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{rand, Max, Rand};
+    use super::{Max, Rand, rand};
     use crate::Random;
 
     #[test]

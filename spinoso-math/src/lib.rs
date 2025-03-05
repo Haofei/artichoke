@@ -208,8 +208,8 @@ impl fmt::Display for Error {
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Self::Domain(ref err) => Some(err),
-            Self::NotImplemented(ref err) => Some(err),
+            Self::Domain(err) => Some(err),
+            Self::NotImplemented(err) => Some(err),
         }
     }
 }

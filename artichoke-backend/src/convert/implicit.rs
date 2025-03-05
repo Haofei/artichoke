@@ -4,11 +4,11 @@ use artichoke_core::debug::Debug as _;
 use artichoke_core::value::Value as _;
 use spinoso_exception::TypeError;
 
+use crate::Artichoke;
 use crate::convert::{BoxUnboxVmValue, UnboxedValueGuard};
 use crate::error::Error;
 use crate::types::Ruby;
 use crate::value::Value;
-use crate::Artichoke;
 
 /// Attempt to implicitly convert a [`Value`] to an integer.
 ///

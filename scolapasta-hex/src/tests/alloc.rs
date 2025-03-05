@@ -1,7 +1,7 @@
 use alloc::string::String;
 use core::fmt::Write;
 
-use crate::{escape_byte, format_into, try_encode, try_encode_into, EscapedByte, Hex};
+use crate::{EscapedByte, Hex, escape_byte, format_into, try_encode, try_encode_into};
 
 // https://tools.ietf.org/html/rfc4648#section-10
 #[test]

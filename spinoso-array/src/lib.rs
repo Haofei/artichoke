@@ -181,10 +181,10 @@ extern crate alloc;
 
 mod array;
 
+#[cfg(any(feature = "small-array", feature = "tiny-array"))]
+pub use array::INLINE_CAPACITY;
 #[cfg(feature = "small-array")]
 pub use array::smallvec::SmallArray;
 #[cfg(feature = "tiny-array")]
 pub use array::tinyvec::TinyArray;
 pub use array::vec::{Array, RawParts};
-#[cfg(any(feature = "small-array", feature = "tiny-array"))]
-pub use array::INLINE_CAPACITY;

@@ -1,6 +1,6 @@
+use crate::Artichoke;
 use crate::core::Regexp;
 use crate::ffi::InterpreterExtractError;
-use crate::Artichoke;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "core-regexp")))]
 impl Regexp for Artichoke {

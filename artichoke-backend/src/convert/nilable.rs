@@ -2,10 +2,10 @@
 //!
 //! Excludes collection types Array and Hash.
 
+use crate::Artichoke;
 use crate::core::{Convert, TryConvert, TryConvertMut, Value as _};
 use crate::error::Error;
 use crate::value::Value;
-use crate::Artichoke;
 
 impl Convert<Option<Value>, Value> for Artichoke {
     fn convert(&self, value: Option<Value>) -> Value {
@@ -77,11 +77,7 @@ impl TryConvertMut<Option<&str>, Value> for Artichoke {
 
 impl Convert<Value, Option<Value>> for Artichoke {
     fn convert(&self, value: Value) -> Option<Value> {
-        if value.is_nil() {
-            None
-        } else {
-            Some(value)
-        }
+        if value.is_nil() { None } else { Some(value) }
     }
 }
 

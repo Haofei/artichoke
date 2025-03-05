@@ -67,8 +67,8 @@ use core::fmt;
 use core::hash::BuildHasher;
 use std::sync::OnceLock;
 
-use intaglio::bytes::SymbolTable;
 use intaglio::SymbolOverflowError;
+use intaglio::bytes::SymbolTable;
 
 // Ensure code blocks in `README.md` compile
 #[cfg(doctest)]

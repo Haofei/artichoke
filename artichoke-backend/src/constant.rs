@@ -1,12 +1,12 @@
 use std::ffi::CString;
 
+use crate::Artichoke;
 use crate::core::DefineConstant;
 use crate::def::{ConstantNameError, NotDefinedError};
 use crate::error::Error;
 use crate::ffi::InterpreterExtractError;
 use crate::sys;
 use crate::value::Value;
-use crate::Artichoke;
 
 impl DefineConstant for Artichoke {
     type Value = Value;

@@ -1,10 +1,10 @@
+use crate::Artichoke;
 use crate::convert::UnboxRubyError;
 use crate::core::{Convert, TryConvert, Value as _};
 use crate::error::Error;
 use crate::sys;
 use crate::types::{Ruby, Rust};
 use crate::value::Value;
-use crate::Artichoke;
 
 impl Convert<bool, Value> for Artichoke {
     fn convert(&self, value: bool) -> Value {

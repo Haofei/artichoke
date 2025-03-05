@@ -1,7 +1,7 @@
+use crate::Artichoke;
 use crate::core::TopSelf;
 use crate::sys;
 use crate::value::Value;
-use crate::Artichoke;
 
 impl TopSelf for Artichoke {
     type Value = Value;

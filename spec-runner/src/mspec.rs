@@ -99,7 +99,7 @@ mod tests {
     use artichoke::prelude::*;
     use bstr::ByteSlice;
 
-    use super::{init, run, Formatter};
+    use super::{Formatter, init, run};
 
     fn load_mspec_with_formatter(formatter: Formatter) {
         let mut interp = artichoke::interpreter().unwrap();

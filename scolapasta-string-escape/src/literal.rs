@@ -32,11 +32,7 @@ pub const fn ascii_char_with_escape(ch: char) -> Option<&'static str> {
     }
     let [ascii_byte, ..] = (ch as u32).to_le_bytes();
     let escape = Literal::debug_escape(ascii_byte);
-    if escape.len() > 1 {
-        Some(escape)
-    } else {
-        None
-    }
+    if escape.len() > 1 { Some(escape) } else { None }
 }
 
 /// Iterator of Ruby debug escape sequences for a byte.

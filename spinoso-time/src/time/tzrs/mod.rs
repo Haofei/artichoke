@@ -14,7 +14,7 @@ mod timezone;
 mod to_a;
 
 pub use error::{IntOverflowError, TimeError, TzOutOfRangeError, TzStringError};
-pub use offset::{Offset, MAX_OFFSET_SECONDS, MIN_OFFSET_SECONDS};
+pub use offset::{MAX_OFFSET_SECONDS, MIN_OFFSET_SECONDS, Offset};
 pub use to_a::ToA;
 
 /// Alias for [`std::result::Result`] with the unified [`TimeError`].

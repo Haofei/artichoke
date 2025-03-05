@@ -1,6 +1,6 @@
 use core::iter::FusedIterator;
 
-use scolapasta_string_escape::{ascii_char_with_escape, InvalidUtf8ByteSequence};
+use scolapasta_string_escape::{InvalidUtf8ByteSequence, ascii_char_with_escape};
 
 use super::{Utf8Str, Utf8String};
 use crate::inspect::Flags;

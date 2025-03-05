@@ -8,10 +8,10 @@ use alloc::vec::Vec;
 use smallvec::SmallVec;
 
 #[cfg(feature = "small-array")]
+use crate::array::INLINE_CAPACITY;
+#[cfg(feature = "small-array")]
 use crate::array::smallvec::SmallArray;
 use crate::array::vec::Array;
-#[cfg(feature = "small-array")]
-use crate::array::INLINE_CAPACITY;
 
 impl<T> From<Vec<T>> for Array<T> {
     #[inline]

@@ -6,10 +6,10 @@ use std::fmt;
 
 use spinoso_exception::Fatal;
 
+use crate::Artichoke;
 use crate::core::{ClassRegistry, TryConvertMut};
 use crate::error::{Error, RubyException};
 use crate::sys;
-use crate::Artichoke;
 
 /// Error type which converts a [`fmt::Error`] into an Artichoke [`Error`].
 ///

@@ -2,12 +2,12 @@ use std::borrow::Cow;
 
 use spinoso_exception::ScriptError;
 
+use crate::Artichoke;
 use crate::core::{ClassRegistry, IncrementLinenoError, Parser, TryConvertMut};
 use crate::error::{Error, RubyException};
 use crate::ffi::InterpreterExtractError;
 use crate::state::parser::Context;
 use crate::sys;
-use crate::Artichoke;
 
 impl Parser for Artichoke {
     type Context = Context;

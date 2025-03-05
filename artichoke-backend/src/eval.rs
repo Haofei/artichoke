@@ -4,6 +4,7 @@ use std::path::Path;
 use scolapasta_path::os_str_to_bytes;
 use spinoso_exception::{ArgumentError, Fatal, LoadError};
 
+use crate::Artichoke;
 use crate::core::{Eval, LoadSources, Parser};
 use crate::error::Error;
 use crate::ffi::InterpreterExtractError;
@@ -11,8 +12,7 @@ use crate::state::parser::Context;
 use crate::sys;
 use crate::sys::protect;
 use crate::value::Value;
-use crate::Artichoke;
-use crate::{exception_handler, RubyException};
+use crate::{RubyException, exception_handler};
 
 impl Eval for Artichoke {
     type Value = Value;
@@ -122,7 +122,10 @@ mod tests {
         #[derive(Debug)]
         struct NestedEval;
 
-        unsafe extern "C" fn nested_eval_file(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+        unsafe extern "C-unwind" fn nested_eval_file(
+            mrb: *mut sys::mrb_state,
+            _slf: sys::mrb_value,
+        ) -> sys::mrb_value {
             unwrap_interpreter!(mrb, to => guard);
             let result = if let Ok(value) = guard.eval(b"__FILE__") {
                 value

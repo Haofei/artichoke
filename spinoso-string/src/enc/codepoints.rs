@@ -51,7 +51,7 @@ impl Iterator for Codepoints<'_> {
         match self {
             Self(State::Ascii(iter)) => iter.next(),
             Self(State::Binary(iter)) => iter.next(),
-            Self(State::Utf8(iter)) => iter.next().map(u32::from),
+            Self(State::Utf8(iter)) => iter.next(),
         }
     }
 }

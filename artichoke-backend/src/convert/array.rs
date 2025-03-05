@@ -1,10 +1,10 @@
+use crate::Artichoke;
 use crate::convert::{BoxUnboxVmValue, UnboxRubyError};
 use crate::core::{Convert, TryConvert, TryConvertMut, Value as _};
 use crate::error::Error;
 use crate::extn::core::array::Array;
 use crate::types::{Ruby, Rust};
 use crate::value::Value;
-use crate::Artichoke;
 
 impl TryConvertMut<&[Value], Value> for Artichoke {
     type Error = Error;

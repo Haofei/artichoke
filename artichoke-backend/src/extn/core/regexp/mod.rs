@@ -4,11 +4,6 @@
 //! Each function on `Regexp` is implemented as its own module which contains
 //! the `Args` struct for invoking the function.
 
-#![expect(
-    clippy::module_name_repetitions,
-    reason = "incompatible with how code is organized in private modules"
-)]
-
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::num::NonZeroUsize;
@@ -17,9 +12,9 @@ use std::str;
 #[doc(inline)]
 #[allow(unused_imports)]
 pub use spinoso_regexp::{
-    nth_match_group_bytes as nth_match_group, Config, Encoding, Flags, InvalidEncodingError, Options, RegexpError,
-    RegexpOption, Source, HIGHEST_MATCH_GROUP, LAST_MATCH, LAST_MATCHED_STRING, STRING_LEFT_OF_MATCH,
-    STRING_RIGHT_OF_MATCH,
+    Config, Encoding, Flags, HIGHEST_MATCH_GROUP, InvalidEncodingError, LAST_MATCH, LAST_MATCHED_STRING, Options,
+    RegexpError, RegexpOption, STRING_LEFT_OF_MATCH, STRING_RIGHT_OF_MATCH, Source,
+    nth_match_group_bytes as nth_match_group,
 };
 
 use crate::convert::implicitly_convert_to_string;

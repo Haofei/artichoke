@@ -14,7 +14,7 @@
 
 use std::fmt;
 
-use arbitrary::{unstructured, Arbitrary, Unstructured};
+use arbitrary::{Arbitrary, Unstructured, unstructured};
 use bstr::ByteSlice;
 
 pub use crate::block::Block;

@@ -292,7 +292,7 @@ impl Rubylib {
             if let Ok(handle) = Handle::from_path(&path) {
                 match self.loaded_features.entry(handle) {
                     Entry::Occupied(_) => {
-                        return Err(io::Error::new(io::ErrorKind::Other, "file is already required"))
+                        return Err(io::Error::new(io::ErrorKind::Other, "file is already required"));
                     }
                     Entry::Vacant(entry) => {
                         entry.insert(path);

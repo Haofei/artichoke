@@ -41,7 +41,7 @@ impl TryConvertMut<Value, Option<Offset>> for Artichoke {
         // [3.1.2] > Time.at(0, i: 0)
         // <internal:timev>:270:in `at': unknown keyword: :i (ArgumentError)
         // ```
-        for (mut key, _) in &hash {
+        for &(mut key, _) in &hash {
             let k = unsafe { Symbol::unbox_from_value(&mut key, self)? }.bytes(self);
             if k != b"in" {
                 let mut message = b"unknown keyword: ".to_vec();

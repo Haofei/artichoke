@@ -23,7 +23,7 @@ use spinoso_random::{InitializeError, NewSeedError, UrandomError};
 #[doc(inline)]
 pub use spinoso_random::{Max, Rand, Random};
 
-use crate::convert::{implicitly_convert_to_int, HeapAllocatedData};
+use crate::convert::{HeapAllocatedData, implicitly_convert_to_int};
 use crate::extn::prelude::*;
 
 pub(in crate::extn) mod mruby;
@@ -212,7 +212,7 @@ mod tests {
         let input = [0x1234_5678, 0x9ABC_DEF0, 0x0, 0x0];
         let seed = Seed::from_mt_seed_lossy(input);
         // High 32 bits: `0x1234_5678`, Low 32 bits: `0x9ABC_DEF0`
-        assert_eq!(seed, Seed::New(0x123_45678_i64 << 32 | 0x9ABC_DEF0));
+        assert_eq!(seed, Seed::New((0x123_45678_i64 << 32) | 0x9ABC_DEF0));
     }
 
     #[test]
@@ -220,7 +220,7 @@ mod tests {
         let input = [u32::MAX, u32::MAX, 0x0, 0x0];
         let seed = Seed::from_mt_seed_lossy(input);
         // High 32 bits: `u32::MAX`, Low 32 bits: `u32::MAX`
-        assert_eq!(seed, Seed::New(i64::from(u32::MAX) << 32 | i64::from(u32::MAX)));
+        assert_eq!(seed, Seed::New((i64::from(u32::MAX) << 32) | i64::from(u32::MAX)));
     }
 
     #[test]
@@ -229,7 +229,7 @@ mod tests {
         let seed = Seed::from_mt_seed_lossy(input);
         // High 32 bits: `0x12345678`, Low 32 bits: `0x9ABCDEF0`
         // The other values are discarded
-        assert_eq!(seed, Seed::New(0x1234_5678_i64 << 32 | 0x9ABC_DEF0));
+        assert_eq!(seed, Seed::New((0x1234_5678_i64 << 32) | 0x9ABC_DEF0));
     }
 
     #[test]

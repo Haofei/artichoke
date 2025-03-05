@@ -273,7 +273,7 @@ impl Utf8 {
 
 #[cfg(test)]
 mod tests {
-    use bstr::{ByteSlice, B};
+    use bstr::{B, ByteSlice};
 
     use super::Utf8;
     use crate::{Config, Encoding, Error, Flags, Options, Source};

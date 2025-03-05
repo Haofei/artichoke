@@ -12,8 +12,8 @@
 //!
 //! [extension hooks]: ExtensionHook
 
-use crate::error::Error;
 use crate::Artichoke;
+use crate::error::Error;
 
 #[cfg(feature = "load-path-native-file-system-loader")]
 mod hybrid;

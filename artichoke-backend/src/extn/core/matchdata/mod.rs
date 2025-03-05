@@ -18,8 +18,8 @@ use bstr::BString;
 use scolapasta_string_escape::format_debug_escape_into;
 
 use crate::convert::{implicitly_convert_to_int, implicitly_convert_to_string};
-use crate::extn::core::regexp::backend::NilableString;
 use crate::extn::core::regexp::Regexp;
+use crate::extn::core::regexp::backend::NilableString;
 use crate::extn::core::symbol::Symbol;
 use crate::extn::prelude::*;
 use crate::fmt::WriteError;

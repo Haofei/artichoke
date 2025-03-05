@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 
-use super::{trampoline, Flags, Regexp};
+use super::{Flags, Regexp, trampoline};
 use crate::extn::prelude::*;
 
 const REGEXP_CSTR: &CStr = c"Regexp";
@@ -54,7 +54,7 @@ pub fn init(interp: &mut Artichoke) -> InitializeResult<()> {
     Ok(())
 }
 
-unsafe extern "C" fn initialize(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn initialize(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let (pattern, options, encoding, _block) = mrb_get_args!(mrb, required = 1, optional = 2, &block);
     unwrap_interpreter!(mrb, to => guard);
     let slf = Value::from(slf);
@@ -71,7 +71,7 @@ unsafe extern "C" fn initialize(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -
     }
 }
 
-unsafe extern "C" fn compile(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn compile(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let args = mrb_get_args!(mrb, *args);
     // Call `mrb_obj_new` instead of allocating an object of class `slf` and
     // delegating to `trampoline::initialize` to handle cases where subclasses
@@ -83,7 +83,7 @@ unsafe extern "C" fn compile(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> s
     }
 }
 
-unsafe extern "C" fn escape(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn escape(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let pattern = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let pattern = Value::from(pattern);
@@ -97,7 +97,7 @@ unsafe extern "C" fn escape(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> s
     }
 }
 
-unsafe extern "C" fn union(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn union(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
     let args = mrb_get_args!(mrb, *args);
     unwrap_interpreter!(mrb, to => guard);
     let args = args.iter().copied().map(Value::from);
@@ -111,7 +111,7 @@ unsafe extern "C" fn union(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sy
     }
 }
 
-unsafe extern "C" fn match_q(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn match_q(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let (pattern, pos) = mrb_get_args!(mrb, required = 1, optional = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -127,7 +127,7 @@ unsafe extern "C" fn match_q(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> s
     }
 }
 
-unsafe extern "C" fn match_(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn match_(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let (pattern, pos, block) = mrb_get_args!(mrb, required = 1, optional = 1, &block);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -143,7 +143,7 @@ unsafe extern "C" fn match_(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sy
     }
 }
 
-unsafe extern "C" fn eql(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn eql(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let other = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -158,7 +158,7 @@ unsafe extern "C" fn eql(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::
     }
 }
 
-unsafe extern "C" fn case_compare(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn case_compare(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let pattern = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -173,7 +173,7 @@ unsafe extern "C" fn case_compare(mrb: *mut sys::mrb_state, slf: sys::mrb_value)
     }
 }
 
-unsafe extern "C" fn match_operator(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn match_operator(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let pattern = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -188,7 +188,7 @@ unsafe extern "C" fn match_operator(mrb: *mut sys::mrb_state, slf: sys::mrb_valu
     }
 }
 
-unsafe extern "C" fn casefold(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn casefold(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -202,7 +202,7 @@ unsafe extern "C" fn casefold(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> 
     }
 }
 
-unsafe extern "C" fn fixed_encoding(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn fixed_encoding(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -216,7 +216,7 @@ unsafe extern "C" fn fixed_encoding(mrb: *mut sys::mrb_state, slf: sys::mrb_valu
     }
 }
 
-unsafe extern "C" fn hash(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn hash(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -230,7 +230,7 @@ unsafe extern "C" fn hash(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys:
     }
 }
 
-unsafe extern "C" fn inspect(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn inspect(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -244,7 +244,7 @@ unsafe extern "C" fn inspect(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> s
     }
 }
 
-unsafe extern "C" fn named_captures(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn named_captures(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -258,7 +258,7 @@ unsafe extern "C" fn named_captures(mrb: *mut sys::mrb_state, slf: sys::mrb_valu
     }
 }
 
-unsafe extern "C" fn names(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn names(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -272,7 +272,7 @@ unsafe extern "C" fn names(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys
     }
 }
 
-unsafe extern "C" fn options(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn options(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -286,7 +286,7 @@ unsafe extern "C" fn options(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> s
     }
 }
 
-unsafe extern "C" fn source(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn source(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -300,7 +300,7 @@ unsafe extern "C" fn source(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sy
     }
 }
 
-unsafe extern "C" fn to_s(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn to_s(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);

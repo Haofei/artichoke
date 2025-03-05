@@ -1,14 +1,14 @@
 //! Glue between mruby FFI and `Time` Rust implementation.
 
 use spinoso_time::strftime::{
-    Error::{FormattedStringTooLarge, InvalidFormatString, WriteZero},
     ASCTIME_FORMAT_STRING,
+    Error::{FormattedStringTooLarge, InvalidFormatString, WriteZero},
 };
 
 use crate::convert::implicitly_convert_to_int;
 use crate::convert::to_str;
 use crate::extn::core::string::{Encoding, String};
-use crate::extn::core::time::{args::Args, subsec::Subsec, Offset, Time};
+use crate::extn::core::time::{Offset, Time, args::Args, subsec::Subsec};
 use crate::extn::prelude::*;
 
 // Constructor

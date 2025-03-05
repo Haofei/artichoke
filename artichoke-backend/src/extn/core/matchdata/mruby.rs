@@ -41,7 +41,7 @@ pub fn init(interp: &mut Artichoke) -> InitializeResult<()> {
     Ok(())
 }
 
-unsafe extern "C" fn matchdata_begin(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_begin(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let begin = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -56,7 +56,7 @@ unsafe extern "C" fn matchdata_begin(mrb: *mut sys::mrb_state, slf: sys::mrb_val
     }
 }
 
-unsafe extern "C" fn matchdata_captures(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_captures(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -70,7 +70,10 @@ unsafe extern "C" fn matchdata_captures(mrb: *mut sys::mrb_state, slf: sys::mrb_
     }
 }
 
-unsafe extern "C" fn matchdata_element_reference(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_element_reference(
+    mrb: *mut sys::mrb_state,
+    slf: sys::mrb_value,
+) -> sys::mrb_value {
     let (elem, len) = mrb_get_args!(mrb, required = 1, optional = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -86,7 +89,7 @@ unsafe extern "C" fn matchdata_element_reference(mrb: *mut sys::mrb_state, slf: 
     }
 }
 
-unsafe extern "C" fn matchdata_end(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_end(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let end = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -101,7 +104,7 @@ unsafe extern "C" fn matchdata_end(mrb: *mut sys::mrb_state, slf: sys::mrb_value
     }
 }
 
-unsafe extern "C" fn matchdata_length(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_length(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -115,7 +118,7 @@ unsafe extern "C" fn matchdata_length(mrb: *mut sys::mrb_state, slf: sys::mrb_va
     }
 }
 
-unsafe extern "C" fn matchdata_named_captures(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_named_captures(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -129,7 +132,7 @@ unsafe extern "C" fn matchdata_named_captures(mrb: *mut sys::mrb_state, slf: sys
     }
 }
 
-unsafe extern "C" fn matchdata_names(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_names(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -143,7 +146,7 @@ unsafe extern "C" fn matchdata_names(mrb: *mut sys::mrb_state, slf: sys::mrb_val
     }
 }
 
-unsafe extern "C" fn matchdata_offset(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_offset(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     let offset = mrb_get_args!(mrb, required = 1);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -158,7 +161,7 @@ unsafe extern "C" fn matchdata_offset(mrb: *mut sys::mrb_state, slf: sys::mrb_va
     }
 }
 
-unsafe extern "C" fn matchdata_post_match(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_post_match(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -172,7 +175,7 @@ unsafe extern "C" fn matchdata_post_match(mrb: *mut sys::mrb_state, slf: sys::mr
     }
 }
 
-unsafe extern "C" fn matchdata_pre_match(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_pre_match(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -186,7 +189,7 @@ unsafe extern "C" fn matchdata_pre_match(mrb: *mut sys::mrb_state, slf: sys::mrb
     }
 }
 
-unsafe extern "C" fn matchdata_regexp(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_regexp(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -200,7 +203,7 @@ unsafe extern "C" fn matchdata_regexp(mrb: *mut sys::mrb_state, slf: sys::mrb_va
     }
 }
 
-unsafe extern "C" fn matchdata_string(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_string(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -214,7 +217,7 @@ unsafe extern "C" fn matchdata_string(mrb: *mut sys::mrb_state, slf: sys::mrb_va
     }
 }
 
-unsafe extern "C" fn matchdata_to_a(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_to_a(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -228,7 +231,7 @@ unsafe extern "C" fn matchdata_to_a(mrb: *mut sys::mrb_state, slf: sys::mrb_valu
     }
 }
 
-unsafe extern "C" fn matchdata_to_s(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn matchdata_to_s(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);

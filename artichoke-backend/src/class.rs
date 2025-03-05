@@ -5,12 +5,12 @@ use std::ffi::CStr;
 use std::hash::{Hash, Hasher};
 use std::ptr::NonNull;
 
+use crate::Artichoke;
 use crate::def::{ConstantNameError, EnclosingRubyScope, Free, Method, NotDefinedError};
 use crate::error::Error;
 use crate::ffi::InterpreterExtractError;
 use crate::method;
 use crate::sys;
-use crate::Artichoke;
 
 #[derive(Debug)]
 pub struct Builder<'a> {

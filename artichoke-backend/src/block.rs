@@ -4,13 +4,13 @@ use std::fmt;
 
 use spinoso_exception::{Fatal, TypeError};
 
+use crate::Artichoke;
 use crate::core::{ClassRegistry, TryConvertMut, Value as _};
 use crate::error::{Error, RubyException};
 use crate::exception_handler;
 use crate::sys::{self, protect};
 use crate::types::{self, Ruby};
 use crate::value::Value;
-use crate::Artichoke;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct NoBlockGiven(Ruby);

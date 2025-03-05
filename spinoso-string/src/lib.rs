@@ -750,7 +750,6 @@ impl IntoIterator for String {
     /// assert_eq!(iterator.next(), None);
     /// ```
     #[inline]
-    #[must_use]
     fn into_iter(self) -> Self::IntoIter {
         self.inner.into_iter()
     }
@@ -775,7 +774,6 @@ impl<'a> IntoIterator for &'a String {
     /// }
     /// ```
     #[inline]
-    #[must_use]
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
@@ -802,7 +800,6 @@ impl<'a> IntoIterator for &'a mut String {
     /// assert_eq!(s, b"111");
     /// ```
     #[inline]
-    #[must_use]
     fn into_iter(self) -> Self::IntoIter {
         self.iter_mut()
     }
@@ -1640,11 +1637,7 @@ impl String {
             2
         } else if let Encoding::Utf8 = self.encoding() {
             let (ch, size) = bstr::decode_last_utf8(self.as_slice());
-            if ch.is_some() {
-                size
-            } else {
-                1
-            }
+            if ch.is_some() { size } else { 1 }
         } else {
             // `buf` is checked to be non-empty above.
             1
@@ -2246,8 +2239,8 @@ fn chomp(string: &mut String, separator: Option<&[u8]>) -> bool {
 mod tests {
     use alloc::string::ToString;
 
-    use crate::center::CenterError;
     use crate::String;
+    use crate::center::CenterError;
 
     #[test]
     fn center_returns_error_with_empty_padding() {

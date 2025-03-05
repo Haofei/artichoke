@@ -2,6 +2,7 @@ use std::fmt::Write;
 
 use spinoso_exception::IOError;
 
+use crate::Artichoke;
 use crate::core::{ModuleRegistry, TryConvertMut, Value as _, Warn};
 use crate::def::NotDefinedError;
 use crate::error::Error;
@@ -9,7 +10,6 @@ use crate::extn::core::warning::Warning;
 use crate::ffi::InterpreterExtractError;
 use crate::fmt::WriteError;
 use crate::state::output::Output;
-use crate::Artichoke;
 
 impl Warn for Artichoke {
     type Error = Error;

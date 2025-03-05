@@ -3,10 +3,10 @@ use std::ffi::CStr;
 use artichoke_core::debug::Debug;
 use artichoke_core::value::Value as _;
 
+use crate::Artichoke;
 use crate::sys;
 use crate::types::Ruby;
 use crate::value::Value;
-use crate::Artichoke;
 
 impl Debug for Artichoke {
     type Value = Value;

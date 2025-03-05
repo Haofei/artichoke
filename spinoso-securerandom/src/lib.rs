@@ -200,10 +200,10 @@ impl error::Error for Error {
     #[inline]
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Self::Argument(ref err) => Some(err),
-            Self::Domain(ref err) => Some(err),
-            Self::RandomBytes(ref err) => Some(err),
-            Self::Memory(ref err) => Some(err),
+            Self::Argument(err) => Some(err),
+            Self::Domain(err) => Some(err),
+            Self::RandomBytes(err) => Some(err),
+            Self::Memory(err) => Some(err),
         }
     }
 }
@@ -668,8 +668,8 @@ pub fn hex(len: Option<i64>) -> Result<String, Error> {
 pub fn base64(len: Option<i64>) -> Result<String, Error> {
     // A `GeneralPurpose` engine using the `alphabet::STANDARD` base64 alphabet
     // and PAD config.
-    use base64::engine::general_purpose::STANDARD;
     use base64::engine::Engine as _;
+    use base64::engine::general_purpose::STANDARD;
 
     let bytes = random_bytes(len)?;
     Ok(STANDARD.encode(bytes))
@@ -701,8 +701,8 @@ pub fn base64(len: Option<i64>) -> Result<String, Error> {
 /// [`RandomBytesError`].
 #[inline]
 pub fn urlsafe_base64(len: Option<i64>, padding: bool) -> Result<String, Error> {
-    use base64::engine::general_purpose::{URL_SAFE, URL_SAFE_NO_PAD};
     use base64::engine::Engine as _;
+    use base64::engine::general_purpose::{URL_SAFE, URL_SAFE_NO_PAD};
 
     let bytes = random_bytes(len)?;
     let engine = if padding { URL_SAFE } else { URL_SAFE_NO_PAD };
@@ -796,7 +796,7 @@ pub fn uuid() -> Result<String, Error> {
 mod tests {
     use core::ops::Not;
 
-    use super::{alphanumeric, base64, hex, random_bytes, random_number, uuid, DomainError, Error, Max, Rand};
+    use super::{DomainError, Error, Max, Rand, alphanumeric, base64, hex, random_bytes, random_number, uuid};
 
     #[test]
     fn random_bytes_default_bytes() {

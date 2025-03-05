@@ -3,7 +3,7 @@ use std::fmt::Write as _;
 use std::ops::Deref;
 use std::ptr::NonNull;
 
-use crate::convert::{implicitly_convert_to_int, implicitly_convert_to_string, UnboxedValueGuard};
+use crate::convert::{UnboxedValueGuard, implicitly_convert_to_int, implicitly_convert_to_string};
 use crate::extn::prelude::*;
 use crate::fmt::WriteError;
 

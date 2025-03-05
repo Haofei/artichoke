@@ -6,7 +6,7 @@ use core::ptr;
 use core::slice;
 use core::str;
 use std::collections::TryReserveError;
-use std::ffi::{c_char, c_double, c_int, c_void, CStr};
+use std::ffi::{CStr, c_char, c_double, c_int, c_void};
 use std::io::Write as _;
 use std::ptr::NonNull;
 
@@ -27,7 +27,7 @@ use crate::value::Value;
 // MRB_API mrb_value mrb_str_new_capa(mrb_state *mrb, size_t capa)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_new_capa(mrb: *mut sys::mrb_state, capa: sys::mrb_int) -> sys::mrb_value {
+unsafe extern "C-unwind" fn mrb_str_new_capa(mrb: *mut sys::mrb_state, capa: sys::mrb_int) -> sys::mrb_value {
     let capa = if let Ok(capa) = usize::try_from(capa) {
         capa
     } else {
@@ -49,7 +49,11 @@ unsafe extern "C" fn mrb_str_new_capa(mrb: *mut sys::mrb_state, capa: sys::mrb_i
 // MRB_API mrb_value mrb_str_new(mrb_state *mrb, const char *p, size_t len)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_new(mrb: *mut sys::mrb_state, p: *const c_char, len: sys::mrb_int) -> sys::mrb_value {
+unsafe extern "C-unwind" fn mrb_str_new(
+    mrb: *mut sys::mrb_state,
+    p: *const c_char,
+    len: sys::mrb_int,
+) -> sys::mrb_value {
     let len = if let Ok(len) = usize::try_from(len) {
         len
     } else {
@@ -77,7 +81,7 @@ unsafe extern "C" fn mrb_str_new(mrb: *mut sys::mrb_state, p: *const c_char, len
 // MRB_API mrb_value mrb_str_new_cstr(mrb_state *mrb, const char *p)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_new_cstr(mrb: *mut sys::mrb_state, p: *const c_char) -> sys::mrb_value {
+unsafe extern "C-unwind" fn mrb_str_new_cstr(mrb: *mut sys::mrb_state, p: *const c_char) -> sys::mrb_value {
     unwrap_interpreter!(mrb, to => guard);
     let cstr = CStr::from_ptr(p);
     let bytes = cstr.to_bytes().to_vec();
@@ -96,7 +100,7 @@ unsafe extern "C" fn mrb_str_new_cstr(mrb: *mut sys::mrb_state, p: *const c_char
 // MRB_API mrb_value mrb_str_new_static(mrb_state *mrb, const char *p, size_t len)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_new_static(
+unsafe extern "C-unwind" fn mrb_str_new_static(
     mrb: *mut sys::mrb_state,
     p: *const c_char,
     len: sys::mrb_int,
@@ -113,7 +117,7 @@ unsafe extern "C" fn mrb_str_new_static(
     clippy::cast_possible_wrap,
     reason = "mruby stores sizes as int64_t instead of size_t"
 )]
-unsafe extern "C" fn mrb_str_index(
+unsafe extern "C-unwind" fn mrb_str_index(
     mrb: *mut sys::mrb_state,
     s: sys::mrb_value,
     sptr: *const c_char,
@@ -169,7 +173,7 @@ unsafe extern "C" fn mrb_str_index(
 // mrb_value mrb_str_aref(mrb_state *mrb, mrb_value str, mrb_value indx, mrb_value alen)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_aref(
+unsafe extern "C-unwind" fn mrb_str_aref(
     mrb: *mut sys::mrb_state,
     s: sys::mrb_value,
     indx: sys::mrb_value,
@@ -206,7 +210,11 @@ unsafe extern "C" fn mrb_str_aref(
 // MRB_API mrb_value mrb_str_resize(mrb_state *mrb, mrb_value str, mrb_int len)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_resize(mrb: *mut sys::mrb_state, s: sys::mrb_value, len: sys::mrb_int) -> sys::mrb_value {
+unsafe extern "C-unwind" fn mrb_str_resize(
+    mrb: *mut sys::mrb_state,
+    s: sys::mrb_value,
+    len: sys::mrb_int,
+) -> sys::mrb_value {
     fn try_resize(s: &mut String, len: usize) -> Result<(), TryReserveError> {
         match len.checked_sub(s.len()) {
             Some(0) => {}
@@ -238,11 +246,6 @@ unsafe extern "C" fn mrb_str_resize(mrb: *mut sys::mrb_state, s: sys::mrb_value,
     let inner = string.take();
     let value = String::box_into_value(inner, value, &mut guard).expect("String reboxing should not fail");
 
-    // `allow` for clarity and to potentially handle `TryReserveErrorKind`.
-    #[expect(
-        clippy::single_match_else,
-        reason = "source compatibility for TryReserveErrorKind stabilization"
-    )]
     match result {
         Ok(()) => value.inner(),
         // NOTE: Ideally this code would distinguish between a capacity overflow
@@ -273,7 +276,7 @@ unsafe extern "C" fn mrb_str_resize(mrb: *mut sys::mrb_state, s: sys::mrb_value,
 //
 // ```
 // #[unsafe(no_mangle)]
-// unsafe extern "C" mrb_str_concat(mrb: *mut sys::mrb_state, this: sys::mrb_value, other: sys::mrb_value) {
+// unsafe extern "C-unwind" mrb_str_concat(mrb: *mut sys::mrb_state, this: sys::mrb_value, other: sys::mrb_value) {
 //     unwrap_interpreter!(mrb, to => guard, or_else = ());
 // }
 // ```
@@ -282,7 +285,11 @@ unsafe extern "C" fn mrb_str_resize(mrb: *mut sys::mrb_state, s: sys::mrb_value,
 // MRB_API mrb_value mrb_str_plus(mrb_state *mrb, mrb_value a, mrb_value b)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_plus(mrb: *mut sys::mrb_state, a: sys::mrb_value, b: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn mrb_str_plus(
+    mrb: *mut sys::mrb_state,
+    a: sys::mrb_value,
+    b: sys::mrb_value,
+) -> sys::mrb_value {
     unwrap_interpreter!(mrb, to => guard);
     let mut a = Value::from(a);
     let mut b = Value::from(b);
@@ -311,7 +318,11 @@ unsafe extern "C" fn mrb_str_plus(mrb: *mut sys::mrb_state, a: sys::mrb_value, b
 // MRB_API int mrb_str_cmp(mrb_state *mrb, mrb_value str1, mrb_value str2)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_cmp(mrb: *mut sys::mrb_state, str1: sys::mrb_value, str2: sys::mrb_value) -> c_int {
+unsafe extern "C-unwind" fn mrb_str_cmp(
+    mrb: *mut sys::mrb_state,
+    str1: sys::mrb_value,
+    str2: sys::mrb_value,
+) -> c_int {
     unwrap_interpreter!(mrb, to => guard, or_else = -1);
     let mut a = Value::from(str1);
     let mut b = Value::from(str2);
@@ -334,7 +345,7 @@ unsafe extern "C" fn mrb_str_cmp(mrb: *mut sys::mrb_state, str1: sys::mrb_value,
 // MRB_API mrb_bool mrb_str_equal(mrb_state *mrb, mrb_value str1, mrb_value str2)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_equal(
+unsafe extern "C-unwind" fn mrb_str_equal(
     mrb: *mut sys::mrb_state,
     str1: sys::mrb_value,
     str2: sys::mrb_value,
@@ -377,7 +388,7 @@ unsafe extern "C" fn mrb_str_equal(
 // MRB_API mrb_value mrb_str_dup(mrb_state *mrb, mrb_value str)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_dup(mrb: *mut sys::mrb_state, s: sys::mrb_value) -> sys::mrb_value {
+unsafe extern "C-unwind" fn mrb_str_dup(mrb: *mut sys::mrb_state, s: sys::mrb_value) -> sys::mrb_value {
     unwrap_interpreter!(mrb, to => guard);
     let mut string = Value::from(s);
     let basic = sys::mrb_sys_basic_ptr(s).cast::<sys::RString>();
@@ -402,7 +413,7 @@ unsafe extern "C" fn mrb_str_dup(mrb: *mut sys::mrb_state, s: sys::mrb_value) ->
 // MRB_API mrb_value mrb_str_substr(mrb_state *mrb, mrb_value str, mrb_int beg, mrb_int len)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_substr(
+unsafe extern "C-unwind" fn mrb_str_substr(
     mrb: *mut sys::mrb_state,
     s: sys::mrb_value,
     beg: sys::mrb_int,
@@ -447,7 +458,7 @@ unsafe extern "C" fn mrb_str_substr(
 // MRB_API mrb_value mrb_ptr_to_str(mrb_state *mrb, void *p)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_ptr_to_str(mrb: *mut sys::mrb_state, p: *mut c_void) -> sys::mrb_value {
+unsafe extern "C-unwind" fn mrb_ptr_to_str(mrb: *mut sys::mrb_state, p: *mut c_void) -> sys::mrb_value {
     unwrap_interpreter!(mrb, to => guard);
     let mut s = String::with_capacity(16 + 2);
     let _ignore = write!(s, "{p:p}");
@@ -466,7 +477,10 @@ unsafe extern "C" fn mrb_ptr_to_str(mrb: *mut sys::mrb_state, p: *mut c_void) ->
 //
 // obsolete: use `RSTRING_CSTR()` or `mrb_string_cstr()`
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_string_value_cstr(mrb: *mut sys::mrb_state, ptr: *mut sys::mrb_value) -> *const c_char {
+unsafe extern "C-unwind" fn mrb_string_value_cstr(
+    mrb: *mut sys::mrb_state,
+    ptr: *mut sys::mrb_value,
+) -> *const c_char {
     unwrap_interpreter!(mrb, to => guard, or_else = ptr::null());
     let mut s = Value::from(*ptr);
     let mut string = if let Ok(string) = String::unbox_from_value(&mut s, &mut guard) {
@@ -495,7 +509,7 @@ unsafe extern "C" fn mrb_string_value_cstr(mrb: *mut sys::mrb_state, ptr: *mut s
 // MRB_API const char* mrb_string_cstr(mrb_state *mrb, mrb_value str)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_string_cstr(mrb: *mut sys::mrb_state, s: sys::mrb_value) -> *const c_char {
+unsafe extern "C-unwind" fn mrb_string_cstr(mrb: *mut sys::mrb_state, s: sys::mrb_value) -> *const c_char {
     unwrap_interpreter!(mrb, to => guard, or_else = ptr::null());
     let mut s = Value::from(s);
     let mut string = if let Ok(string) = String::unbox_from_value(&mut s, &mut guard) {
@@ -528,7 +542,7 @@ unsafe extern "C" fn mrb_string_cstr(mrb: *mut sys::mrb_state, s: sys::mrb_value
 //
 // This function converts a numeric string to numeric `mrb_value` with the given base.
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_to_integer(
+unsafe extern "C-unwind" fn mrb_str_to_integer(
     mrb: *mut sys::mrb_state,
     s: sys::mrb_value,
     base: sys::mrb_int,
@@ -593,7 +607,11 @@ unsafe extern "C" fn mrb_str_to_integer(
 // MRB_API double mrb_str_to_dbl(mrb_state *mrb, mrb_value str, mrb_bool badcheck)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_to_dbl(mrb: *mut sys::mrb_state, s: sys::mrb_value, badcheck: sys::mrb_bool) -> c_double {
+unsafe extern "C-unwind" fn mrb_str_to_dbl(
+    mrb: *mut sys::mrb_state,
+    s: sys::mrb_value,
+    badcheck: sys::mrb_bool,
+) -> c_double {
     unwrap_interpreter!(mrb, to => guard, or_else = 0.0);
     let mut s = Value::from(s);
     let s = if let Ok(s) = String::unbox_from_value(&mut s, &mut guard) {
@@ -625,7 +643,7 @@ unsafe extern "C" fn mrb_str_to_dbl(mrb: *mut sys::mrb_state, s: sys::mrb_value,
 // MRB_API mrb_value mrb_str_cat(mrb_state *mrb, mrb_value str, const char *ptr, size_t len)
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_cat(
+unsafe extern "C-unwind" fn mrb_str_cat(
     mrb: *mut sys::mrb_state,
     s: sys::mrb_value,
     ptr: *const c_char,
@@ -667,7 +685,7 @@ unsafe extern "C" fn mrb_str_cat(
 // uint32_t mrb_str_hash(mrb_state *mrb, mrb_value str);
 // ```
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_str_hash(mrb: *mut sys::mrb_state, s: sys::mrb_value) -> u32 {
+unsafe extern "C-unwind" fn mrb_str_hash(mrb: *mut sys::mrb_state, s: sys::mrb_value) -> u32 {
     unwrap_interpreter!(mrb, to => guard, or_else = 0);
     let mut s = Value::from(s);
     let mut hasher = if let Ok(global_build_hasher) = guard.global_build_hasher() {
@@ -700,7 +718,7 @@ const FNV_32_PRIME: Wrapping<u32> = Wrapping(0x0100_0193);
 const FNV1_32_INIT: Wrapping<u32> = Wrapping(0x811c_9dc5);
 
 #[unsafe(no_mangle)]
-unsafe extern "C" fn mrb_byte_hash(s: *const u8, len: sys::mrb_int) -> u32 {
+unsafe extern "C-unwind" fn mrb_byte_hash(s: *const u8, len: sys::mrb_int) -> u32 {
     mrb_byte_hash_step(s, len, FNV1_32_INIT)
 }
 
@@ -710,7 +728,7 @@ unsafe extern "C" fn mrb_byte_hash(s: *const u8, len: sys::mrb_int) -> u32 {
     clippy::cast_sign_loss,
     reason = "mruby stores sizes as int64_t instead of size_t"
 )]
-unsafe extern "C" fn mrb_byte_hash_step(s: *const u8, len: sys::mrb_int, mut hval: Wrapping<u32>) -> u32 {
+unsafe extern "C-unwind" fn mrb_byte_hash_step(s: *const u8, len: sys::mrb_int, mut hval: Wrapping<u32>) -> u32 {
     let slice = slice::from_raw_parts(s, len as usize);
     // FNV-1 hash each octet in the buffer
     for &byte in slice {
@@ -729,7 +747,7 @@ unsafe extern "C" fn mrb_byte_hash_step(s: *const u8, len: sys::mrb_int, mut hva
     clippy::cast_sign_loss,
     reason = "mruby stores sizes as int64_t instead of size_t"
 )]
-unsafe extern "C" fn mrb_gc_free_str(mrb: *mut sys::mrb_state, string: *mut sys::RString) {
+unsafe extern "C-unwind" fn mrb_gc_free_str(mrb: *mut sys::mrb_state, string: *mut sys::RString) {
     let _ = mrb;
 
     let Some(ptr) = NonNull::<c_char>::new((*string).as_.heap.ptr) else {

@@ -1,7 +1,7 @@
 use core::fmt;
 use core::iter::FusedIterator;
 
-use scolapasta_string_escape::{ascii_char_with_escape, InvalidUtf8ByteSequence};
+use scolapasta_string_escape::{InvalidUtf8ByteSequence, ascii_char_with_escape};
 
 use crate::ident::IdentifierType;
 
@@ -746,7 +746,7 @@ mod functionals {
     use std::string::String;
 
     use super::Inspect;
-    use crate::fixtures::{IDENTS, IDENT_INSPECTS};
+    use crate::fixtures::{IDENT_INSPECTS, IDENTS};
 
     #[test]
     fn mri_symbol_idents() {

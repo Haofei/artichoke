@@ -10,13 +10,13 @@ use artichoke_core::intern::Intern;
 use artichoke_core::value::Value as ValueCore;
 use spinoso_exception::{ArgumentError, Fatal};
 
+use crate::Artichoke;
 use crate::core::ClassRegistry;
 use crate::error::{Error, RubyException};
 use crate::exception_handler;
 use crate::gc::MrbGarbageCollection;
 use crate::sys::{self, protect};
 use crate::types::{self, Ruby};
-use crate::Artichoke;
 
 /// Max argument count for function calls including initialize and yield.
 pub const MRB_FUNCALL_ARGC_MAX: usize = 16;

@@ -1,12 +1,12 @@
 use std::borrow::Cow;
 use std::str;
 
+use crate::Artichoke;
 use crate::convert::UnboxRubyError;
 use crate::core::TryConvertMut;
 use crate::error::Error;
 use crate::types::Rust;
 use crate::value::Value;
-use crate::Artichoke;
 
 impl TryConvertMut<String, Value> for Artichoke {
     type Error = Error;

@@ -137,11 +137,11 @@ mod rand;
 mod random;
 mod urandom;
 
-pub use random::{new_seed, seed_to_key, Random};
+pub use random::{Random, new_seed, seed_to_key};
 pub use urandom::urandom;
 
 #[cfg(feature = "rand-method")]
-pub use self::rand::{rand, Max, Rand};
+pub use self::rand::{Max, Rand, rand};
 
 /// Sum type of all errors possibly returned from `Random` functions.
 ///
@@ -214,10 +214,10 @@ impl fmt::Display for Error {
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Self::Argument(ref err) => Some(err),
-            Self::Initialize(ref err) => Some(err),
-            Self::NewSeed(ref err) => Some(err),
-            Self::Urandom(ref err) => Some(err),
+            Self::Argument(err) => Some(err),
+            Self::Initialize(err) => Some(err),
+            Self::NewSeed(err) => Some(err),
+            Self::Urandom(err) => Some(err),
         }
     }
 }

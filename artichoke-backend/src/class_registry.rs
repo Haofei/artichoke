@@ -1,12 +1,12 @@
 use std::any::Any;
 
+use crate::Artichoke;
 use crate::class;
 use crate::core::ClassRegistry;
 use crate::error::Error;
 use crate::ffi::InterpreterExtractError;
 use crate::sys;
 use crate::value::Value;
-use crate::Artichoke;
 
 impl ClassRegistry for Artichoke {
     type Value = Value;

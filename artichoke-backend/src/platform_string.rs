@@ -4,10 +4,10 @@ use artichoke_core::convert::TryConvertMut;
 use scolapasta_path::ConvertBytesError;
 use spinoso_exception::ArgumentError;
 
+use crate::Artichoke;
 use crate::core::ClassRegistry;
 use crate::error::{Error, RubyException};
 use crate::sys;
-use crate::Artichoke;
 
 impl RubyException for ConvertBytesError {
     fn message(&self) -> Cow<'_, [u8]> {

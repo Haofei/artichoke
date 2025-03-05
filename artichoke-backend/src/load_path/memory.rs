@@ -6,7 +6,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use bstr::{BString, ByteSlice};
-use scolapasta_path::{absolutize_relative_to, normalize_slashes, ConvertBytesError};
+use scolapasta_path::{ConvertBytesError, absolutize_relative_to, normalize_slashes};
 
 use super::{ExtensionHook, RUBY_LOAD_PATH};
 

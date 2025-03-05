@@ -7,6 +7,7 @@ use std::ptr;
 
 use spinoso_exception::TypeError;
 
+use crate::Artichoke;
 use crate::core::Value as _;
 use crate::def::NotDefinedError;
 use crate::error::Error;
@@ -14,7 +15,6 @@ use crate::ffi::InterpreterExtractError;
 use crate::sys;
 use crate::types::Ruby;
 use crate::value::Value;
-use crate::Artichoke;
 
 pub struct UnboxedValueGuard<'a, T> {
     guarded: ManuallyDrop<T>,
@@ -164,6 +164,11 @@ pub trait BoxUnboxVmValue {
 
     fn box_into_value(value: Self::Unboxed, into: Value, interp: &mut Artichoke) -> Result<Value, Error>;
 
+    /// # Safety
+    ///
+    /// Implementations must ensure that the `data` pointer is valid and that
+    /// the memory it points to is properly deallocated. This method is called
+    /// in an `extern "C" fn` and may never panic.
     fn free(data: *mut c_void);
 }
 
@@ -318,7 +323,7 @@ mod tests {
     #[derive(Default, Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
     struct Container(String);
 
-    unsafe extern "C" fn container_value(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+    unsafe extern "C-unwind" fn container_value(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
         unwrap_interpreter!(mrb, to => guard);
 
         let mut value = Value::from(slf);

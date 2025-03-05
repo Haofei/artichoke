@@ -1725,7 +1725,7 @@ pub fn to_i(interp: &mut Artichoke, mut value: Value, base: Option<Value>) -> Re
             Ok(int) => return Ok(interp.convert(sign * int)),
             Err(IntErrorKind::Empty | IntErrorKind::Zero) => return Ok(interp.convert(0)),
             Err(IntErrorKind::PosOverflow | IntErrorKind::NegOverflow) => {
-                return Err(NotImplementedError::new().into())
+                return Err(NotImplementedError::new().into());
             }
             _ => {
                 // if parsing failed, start discarding from the end one byte at a time.

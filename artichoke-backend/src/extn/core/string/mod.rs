@@ -7,12 +7,12 @@ use spinoso_exception::TypeError;
 #[doc(inline)]
 pub use spinoso_string::{Encoding, RawParts, String};
 
+use crate::Artichoke;
 use crate::convert::{BoxUnboxVmValue, UnboxedValueGuard};
 use crate::error::Error;
 use crate::sys;
 use crate::types::Ruby;
 use crate::value::Value;
-use crate::Artichoke;
 
 mod ffi;
 pub(in crate::extn) mod mruby;

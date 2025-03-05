@@ -1,10 +1,10 @@
+use crate::Artichoke;
 use crate::convert::{BoxIntoRubyError, UnboxRubyError};
 use crate::core::{Convert, TryConvert, Value as _};
 use crate::error::Error;
 use crate::sys;
 use crate::types::{Ruby, Rust};
 use crate::value::Value;
-use crate::Artichoke;
 
 impl Convert<u8, Value> for Artichoke {
     #[inline]

@@ -76,7 +76,7 @@ where
 }
 
 trait Protect {
-    unsafe extern "C" fn run(mrb: *mut sys::mrb_state, data: sys::mrb_value) -> sys::mrb_value;
+    unsafe extern "C-unwind" fn run(mrb: *mut sys::mrb_state, data: sys::mrb_value) -> sys::mrb_value;
 }
 
 // `Funcall` must be `Copy` because we may unwind past the frames in which
@@ -90,7 +90,7 @@ struct Funcall<'a> {
 }
 
 impl Protect for Funcall<'_> {
-    unsafe extern "C" fn run(mrb: *mut sys::mrb_state, data: sys::mrb_value) -> sys::mrb_value {
+    unsafe extern "C-unwind" fn run(mrb: *mut sys::mrb_state, data: sys::mrb_value) -> sys::mrb_value {
         // SAFETY: callers will ensure `data` is a valid `Funcall` struct via
         // the `Protect` trait.
         let Self { slf, func, args, block } = unsafe {
@@ -129,7 +129,7 @@ struct Eval<'a> {
 }
 
 impl Protect for Eval<'_> {
-    unsafe extern "C" fn run(mrb: *mut sys::mrb_state, data: sys::mrb_value) -> sys::mrb_value {
+    unsafe extern "C-unwind" fn run(mrb: *mut sys::mrb_state, data: sys::mrb_value) -> sys::mrb_value {
         // SAFETY: callers will ensure `data` is a valid `Eval` struct via the
         // `Protect` trait.
         let Self { context, code } = unsafe {
@@ -159,7 +159,7 @@ struct BlockYield {
 }
 
 impl Protect for BlockYield {
-    unsafe extern "C" fn run(mrb: *mut sys::mrb_state, data: sys::mrb_value) -> sys::mrb_value {
+    unsafe extern "C-unwind" fn run(mrb: *mut sys::mrb_state, data: sys::mrb_value) -> sys::mrb_value {
         // SAFETY: callers will ensure `data` is a valid `BlockYield` struct via
         // the `Protect` trait.
         let Self { block, arg } = unsafe {
@@ -208,7 +208,7 @@ struct IsRange {
 }
 
 impl Protect for IsRange {
-    unsafe extern "C" fn run(mrb: *mut sys::mrb_state, data: sys::mrb_value) -> sys::mrb_value {
+    unsafe extern "C-unwind" fn run(mrb: *mut sys::mrb_state, data: sys::mrb_value) -> sys::mrb_value {
         use sys::mrb_range_beg_len::{MRB_RANGE_OK, MRB_RANGE_OUT, MRB_RANGE_TYPE_MISMATCH};
 
         // SAFETY: callers will ensure `data` is a valid `IsRange` struct via

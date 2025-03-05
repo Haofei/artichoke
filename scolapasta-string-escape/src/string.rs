@@ -1,6 +1,6 @@
 use core::fmt::{self, Write};
 
-use crate::literal::{ascii_char_with_escape, Literal};
+use crate::literal::{Literal, ascii_char_with_escape};
 
 /// Write a UTF-8 debug representation of a byte slice into the given writer.
 ///

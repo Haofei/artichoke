@@ -1,13 +1,13 @@
 use std::sync::{Mutex, PoisonError};
 
 use rustyline::{
+    Changeset, Helper,
     completion::Completer,
     error::ReadlineError,
     highlight::Highlighter,
     hint::Hinter,
     line_buffer::LineBuffer,
     validate::{ValidationContext, ValidationResult, Validator},
-    Changeset, Helper,
 };
 
 use crate::Artichoke;

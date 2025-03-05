@@ -332,7 +332,7 @@ mod tests {
     use alloc::string::String;
     use core::fmt::Write as _;
 
-    use super::{Radix, RADIX_TABLE};
+    use super::{RADIX_TABLE, Radix};
     use crate::error::InvalidRadixExceptionKind;
 
     #[test]

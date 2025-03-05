@@ -7,10 +7,10 @@ use std::ops::{Deref, DerefMut};
 
 use spinoso_exception::Fatal;
 
+use crate::Artichoke;
 use crate::core::{ClassRegistry, TryConvertMut};
 use crate::error::{Error, RubyException};
 use crate::sys;
-use crate::Artichoke;
 
 /// Failed to create a new GC arena savepoint.
 ///
