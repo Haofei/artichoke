@@ -45,18 +45,16 @@ impl<'a> Builder<'a> {
         U: Into<Cow<'static, str>>,
     {
         let state = self.interp.state.as_deref().ok_or_else(InterpreterExtractError::new)?;
-        let rclass = if let Some(spec) = state.classes.get::<T>() {
-            spec.rclass()
-        } else {
+        let Some(spec) = state.classes.get::<T>() else {
             return Err(NotDefinedError::super_class(classname.into()).into());
         };
+        let rclass = spec.rclass();
         let rclass = unsafe { self.interp.with_ffi_boundary(|mrb| rclass.resolve(mrb))? };
-        if let Some(rclass) = rclass {
-            self.super_class = Some(rclass);
-            Ok(self)
-        } else {
-            Err(NotDefinedError::super_class(classname.into()).into())
-        }
+        let Some(rclass) = rclass else {
+            return Err(NotDefinedError::super_class(classname.into()).into());
+        };
+        self.super_class = Some(rclass);
+        Ok(self)
     }
 
     pub fn add_method<T>(mut self, name: T, method: Method, args: sys::mrb_aspec) -> Result<Self, ConstantNameError>
@@ -108,17 +106,16 @@ impl<'a> Builder<'a> {
             rclass
         } else if let Some(enclosing_scope) = self.spec.enclosing_scope() {
             let scope = unsafe { self.interp.with_ffi_boundary(|mrb| enclosing_scope.rclass(mrb)) };
-            if let Ok(Some(mut scope)) = scope {
-                let rclass = unsafe {
-                    self.interp.with_ffi_boundary(|mrb| {
-                        sys::mrb_define_class_under(mrb, scope.as_mut(), name, super_class.as_mut())
-                    })
-                };
-                let rclass = rclass.map_err(|_| NotDefinedError::class(self.spec.name()))?;
-                NonNull::new(rclass).ok_or_else(|| NotDefinedError::class(self.spec.name()))?
-            } else {
+            let Ok(Some(mut scope)) = scope else {
                 return Err(NotDefinedError::enclosing_scope(enclosing_scope.fqname().into_owned()));
-            }
+            };
+            let rclass = unsafe {
+                self.interp.with_ffi_boundary(|mrb| {
+                    sys::mrb_define_class_under(mrb, scope.as_mut(), name, super_class.as_mut())
+                })
+            };
+            let rclass = rclass.map_err(|_| NotDefinedError::class(self.spec.name()))?;
+            NonNull::new(rclass).ok_or_else(|| NotDefinedError::class(self.spec.name()))?
         } else {
             let rclass = unsafe {
                 self.interp
@@ -264,14 +261,13 @@ impl Spec {
 
     #[must_use]
     pub fn fqname(&self) -> Cow<'_, str> {
-        if let Some(scope) = self.enclosing_scope() {
-            let mut fqname = String::from(scope.fqname());
-            fqname.push_str("::");
-            fqname.push_str(self.name.as_ref());
-            fqname.into()
-        } else {
-            self.name.as_ref().into()
-        }
+        let Some(scope) = self.enclosing_scope() else {
+            return self.name();
+        };
+        let mut fqname = String::from(scope.fqname());
+        fqname.push_str("::");
+        fqname.push_str(self.name.as_ref());
+        fqname.into()
     }
 
     #[must_use]

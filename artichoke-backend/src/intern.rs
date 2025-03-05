@@ -12,15 +12,13 @@ use crate::sys;
 impl Artichoke {
     pub fn lookup_symbol_with_trailing_nul(&self, symbol: u32) -> Result<Option<&[u8]>, Error> {
         let state = self.state.as_deref().ok_or_else(InterpreterExtractError::new)?;
-        if let Some(symbol) = symbol.checked_sub(1) {
-            if let Some(bytes) = state.symbols.get(symbol.into()) {
-                Ok(Some(bytes))
-            } else {
-                Ok(None)
-            }
-        } else {
-            Ok(None)
-        }
+        let Some(symbol) = symbol.checked_sub(1) else {
+            return Ok(None);
+        };
+        let Some(bytes) = state.symbols.get(symbol.into()) else {
+            return Ok(None);
+        };
+        Ok(Some(bytes))
     }
 
     pub fn intern_bytes_with_trailing_nul<T>(&mut self, bytes: T) -> Result<u32, Error>
@@ -41,16 +39,15 @@ impl Artichoke {
     pub fn check_interned_bytes_with_trailing_nul(&self, bytes: &[u8]) -> Result<Option<u32>, Error> {
         let state = self.state.as_deref().ok_or_else(InterpreterExtractError::new)?;
         let symbol = state.symbols.check_interned(bytes);
-        if let Some(symbol) = symbol {
-            let symbol = u32::from(symbol);
-            // mruby expects symbols to be non-zero.
-            let symbol = symbol
-                .checked_add(<Self as Intern>::SYMBOL_RANGE_START)
-                .ok_or_else(SymbolOverflowError::new)?;
-            Ok(Some(symbol))
-        } else {
-            Ok(None)
-        }
+        let Some(symbol) = symbol else {
+            return Ok(None);
+        };
+        let symbol = u32::from(symbol);
+        // mruby expects symbols to be non-zero.
+        let symbol = symbol
+            .checked_add(<Self as Intern>::SYMBOL_RANGE_START)
+            .ok_or_else(SymbolOverflowError::new)?;
+        Ok(Some(symbol))
     }
 }
 
@@ -83,41 +80,37 @@ impl Intern for Artichoke {
         let mut bytes = bytes.to_vec();
         bytes.push(b'\0');
         let symbol = state.symbols.check_interned(&bytes);
-        if let Some(symbol) = symbol {
-            let symbol = u32::from(symbol);
-            // mruby expects symbols to be non-zero.
-            let symbol = symbol
-                .checked_add(Self::SYMBOL_RANGE_START)
-                .ok_or_else(SymbolOverflowError::new)?;
-            Ok(Some(symbol))
-        } else {
-            Ok(None)
-        }
+        let Some(symbol) = symbol else {
+            return Ok(None);
+        };
+        let symbol = u32::from(symbol);
+        // mruby expects symbols to be non-zero.
+        let symbol = symbol
+            .checked_add(Self::SYMBOL_RANGE_START)
+            .ok_or_else(SymbolOverflowError::new)?;
+        Ok(Some(symbol))
     }
 
     fn lookup_symbol(&self, symbol: Self::Symbol) -> Result<Option<&[u8]>, Self::Error> {
         let state = self.state.as_deref().ok_or_else(InterpreterExtractError::new)?;
-        if let Some(symbol) = symbol.checked_sub(Self::SYMBOL_RANGE_START) {
-            if let Some(bytes) = state.symbols.get(symbol.into()) {
-                if bytes.is_empty() {
-                    Ok(Some(bytes))
-                } else {
-                    Ok(bytes.get(..bytes.len() - 1))
-                }
-            } else {
-                Ok(None)
-            }
+        let Some(symbol) = symbol.checked_sub(Self::SYMBOL_RANGE_START) else {
+            return Ok(None);
+        };
+        let Some(bytes) = state.symbols.get(symbol.into()) else {
+            return Ok(None);
+        };
+        if bytes.is_empty() {
+            Ok(Some(bytes))
         } else {
-            Ok(None)
+            Ok(bytes.get(..bytes.len() - 1))
         }
     }
 
     fn symbol_count(&self) -> usize {
-        if let Some(state) = self.state.as_deref() {
-            state.symbols.len()
-        } else {
-            0
-        }
+        let Some(state) = self.state.as_deref() else {
+            return 0;
+        };
+        state.symbols.len()
     }
 }
 

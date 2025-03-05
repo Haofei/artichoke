@@ -186,11 +186,11 @@ where
         interp: &mut Artichoke,
     ) -> Result<UnboxedValueGuard<'a, Self::Guarded>, Error> {
         // Make sure we have a Data otherwise extraction will fail.
-        if value.ruby_type() != Ruby::Data {
+        let Ruby::Data = value.ruby_type() else {
             let mut message = String::from("uninitialized ");
             message.push_str(Self::RUBY_TYPE);
             return Err(TypeError::from(message).into());
-        }
+        };
 
         let mut rclass = {
             let state = interp.state.as_ref().ok_or_else(InterpreterExtractError::new)?;
@@ -327,12 +327,13 @@ mod tests {
         unwrap_interpreter!(mrb, to => guard);
 
         let mut value = Value::from(slf);
-        let result = if let Ok(container) = unsafe { Container::unbox_from_value(&mut value, &mut guard) } {
-            guard.try_convert_mut(container.0.as_bytes()).unwrap_or_default()
-        } else {
-            Value::nil()
+        let Ok(container) = (unsafe { Container::unbox_from_value(&mut value, &mut guard) }) else {
+            return Value::nil().inner();
         };
-        result.inner()
+        guard
+            .try_convert_mut(container.0.as_bytes())
+            .unwrap_or_default()
+            .inner()
     }
 
     impl HeapAllocatedData for Container {

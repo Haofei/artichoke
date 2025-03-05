@@ -120,20 +120,25 @@ pub struct ModuleScope {
     enclosing_scope: Option<Box<EnclosingRubyScope>>,
 }
 
-/// Typesafe wrapper for the [`RClass *`](sys::RClass) of the enclosing scope
-/// for an mruby `Module` or `Class`.
+/// Typesafe wrapper for the [`RClass *`] of the enclosing scope for an mruby
+/// `Module` or `Class`.
 ///
-/// In Ruby, classes and modules can be defined inside another class or
-/// module. mruby only supports resolving [`RClass`](sys::RClass) pointers
-/// relative to an enclosing scope. This can be the top level with
-/// [`mrb_class_get`](sys::mrb_class_get) and
-/// [`mrb_module_get`](sys::mrb_module_get) or it can be under another class
-/// with [`mrb_class_get_under`](sys::mrb_class_get_under) or module with
-/// [`mrb_module_get_under`](sys::mrb_module_get_under).
+/// In Ruby, classes and modules can be defined inside another class or module.
+/// mruby only supports resolving [`RClass`] pointers relative to an enclosing
+/// scope. This can be the top level with [`mrb_class_get`] and
+/// [`mrb_module_get`] or it can be under another class with
+/// [`mrb_class_get_under`] or module with [`mrb_module_get_under`].
 ///
 /// Because there is no C API to resolve class and module names directly, each
 /// class-like holds a reference to its enclosing scope so it can recursively
-/// resolve its enclosing [`RClass *`](sys::RClass).
+/// resolve its enclosing [`RClass *`].
+///
+/// [`RClass *`]: sys::RClass
+/// [`RClass`]: sys::RClass
+/// [`mrb_class_get`]: sys::mrb_class_get
+/// [`mrb_module_get`]: sys::mrb_module_get
+/// [`mrb_class_get_under`]: sys::mrb_class_get_under
+/// [`mrb_module_get_under`]: sys::mrb_module_get_under
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum EnclosingRubyScope {
     /// Reference to a Ruby `Class` enclosing scope.
@@ -173,7 +178,7 @@ impl EnclosingRubyScope {
         })
     }
 
-    /// Resolve the [`RClass *`](sys::RClass) of the wrapped class or module.
+    /// Resolve the [`RClass *`] of the wrapped class or module.
     ///
     /// Return [`None`] if the class-like has no [`EnclosingRubyScope`].
     ///
@@ -184,7 +189,10 @@ impl EnclosingRubyScope {
     ///
     /// This function must be called within an [`Artichoke::with_ffi_boundary`]
     /// closure because the FFI APIs called in this function may require access
-    /// to the Artichoke [`State`](crate::state::State).
+    /// to the Artichoke [`State`].
+    ///
+    /// [`RClass *`]: sys::RClass
+    /// [`State`]: crate::state::State
     pub unsafe fn rclass(&self, mrb: *mut sys::mrb_state) -> Option<NonNull<sys::RClass>> {
         match self {
             Self::Class(scope) => {
@@ -225,14 +233,13 @@ impl EnclosingRubyScope {
             Self::Class(scope) => (&*scope.name, &scope.enclosing_scope),
             Self::Module(scope) => (&*scope.name, &scope.enclosing_scope),
         };
-        if let Some(scope) = enclosing_scope {
-            let mut fqname = String::from(scope.fqname());
-            fqname.push_str("::");
-            fqname.push_str(name);
-            fqname.into()
-        } else {
-            name.into()
-        }
+        let Some(scope) = enclosing_scope else {
+            return name.into();
+        };
+        let mut fqname = String::from(scope.fqname());
+        fqname.push_str("::");
+        fqname.push_str(name);
+        fqname.into()
     }
 }
 

@@ -28,9 +28,7 @@ use crate::sys;
 /// [`Box::into_raw`] and that the pointer is to a non-free'd
 /// [`Box`]`<`[`State`]`>`.
 pub unsafe fn from_user_data(mrb: *mut sys::mrb_state) -> Result<Artichoke, InterpreterExtractError> {
-    let mut mrb = if let Some(mrb) = NonNull::new(mrb) {
-        mrb
-    } else {
+    let Some(mut mrb) = NonNull::new(mrb) else {
         emit_fatal_warning!("ffi: Attempted to extract Artichoke from null `mrb_state`");
         return Err(InterpreterExtractError::new());
     };
@@ -42,12 +40,11 @@ pub unsafe fn from_user_data(mrb: *mut sys::mrb_state) -> Result<Artichoke, Inte
     } else {
         // SAFETY: `mrb` is valid and non-null by caller contract and non-null check.
         let alloc_ud = mem::replace(unsafe { &mut mrb.as_mut().allocf_ud }, ptr::null_mut());
-        if let Some(state) = NonNull::new(alloc_ud) {
-            state.cast::<State>()
-        } else {
+        let Some(state) = NonNull::new(alloc_ud) else {
             emit_fatal_warning!("ffi: Attempted to extract Artichoke from null `mrb_state->ud` pointer");
             return Err(InterpreterExtractError::new());
-        }
+        };
+        state.cast::<State>()
     };
 
     // SAFETY: An `Artichoke`-initialized `mrb_state` has a `State` in the user

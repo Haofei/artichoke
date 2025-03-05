@@ -41,11 +41,10 @@ impl From<sys::mrb_value> for Value {
 
 impl From<Option<sys::mrb_value>> for Value {
     fn from(value: Option<sys::mrb_value>) -> Self {
-        if let Some(value) = value {
-            Self::from(value)
-        } else {
-            Self::nil()
-        }
+        let Some(value) = value else {
+            return Self::nil();
+        };
+        Self::from(value)
     }
 }
 
@@ -198,11 +197,10 @@ impl ValueCore for Value {
     }
 
     fn inspect(&self, interp: &mut Self::Artichoke) -> Vec<u8> {
-        if let Ok(display) = self.funcall(interp, "inspect", &[], None) {
-            display.try_convert_into_mut(interp).unwrap_or_default()
-        } else {
-            Vec::new()
-        }
+        let Ok(display) = self.funcall(interp, "inspect", &[], None) else {
+            return vec![];
+        };
+        display.try_convert_into_mut(interp).unwrap_or_default()
     }
 
     fn is_nil(&self) -> bool {
@@ -223,11 +221,10 @@ impl ValueCore for Value {
     }
 
     fn to_s(&self, interp: &mut Self::Artichoke) -> Vec<u8> {
-        if let Ok(display) = self.funcall(interp, "to_s", &[], None) {
-            display.try_convert_into_mut(interp).unwrap_or_default()
-        } else {
-            Vec::new()
-        }
+        let Ok(display) = self.funcall(interp, "to_s", &[], None) else {
+            return vec![];
+        };
+        display.try_convert_into_mut(interp).unwrap_or_default()
     }
 
     fn ruby_type(&self) -> Ruby {
@@ -260,14 +257,7 @@ impl TryFrom<Vec<Value>> for ArgCountError {
     type Error = ();
 
     fn try_from(args: Vec<Value>) -> Result<Self, Self::Error> {
-        if args.len() > MRB_FUNCALL_ARGC_MAX {
-            Ok(Self {
-                given: args.len(),
-                max: MRB_FUNCALL_ARGC_MAX,
-            })
-        } else {
-            Err(())
-        }
+        args.as_slice().try_into()
     }
 }
 
@@ -275,14 +265,7 @@ impl TryFrom<Vec<sys::mrb_value>> for ArgCountError {
     type Error = ();
 
     fn try_from(args: Vec<sys::mrb_value>) -> Result<Self, Self::Error> {
-        if args.len() > MRB_FUNCALL_ARGC_MAX {
-            Ok(Self {
-                given: args.len(),
-                max: MRB_FUNCALL_ARGC_MAX,
-            })
-        } else {
-            Err(())
-        }
+        args.as_slice().try_into()
     }
 }
 
@@ -290,14 +273,15 @@ impl TryFrom<&[Value]> for ArgCountError {
     type Error = ();
 
     fn try_from(args: &[Value]) -> Result<Self, Self::Error> {
-        if args.len() > MRB_FUNCALL_ARGC_MAX {
-            Ok(Self {
-                given: args.len(),
-                max: MRB_FUNCALL_ARGC_MAX,
-            })
-        } else {
-            Err(())
+        // Arg count is ok, so we failed ton construct the error.
+        if args.len() <= MRB_FUNCALL_ARGC_MAX {
+            return Err(());
         }
+        let err = Self {
+            given: args.len(),
+            max: MRB_FUNCALL_ARGC_MAX,
+        };
+        Ok(err)
     }
 }
 
@@ -305,14 +289,15 @@ impl TryFrom<&[sys::mrb_value]> for ArgCountError {
     type Error = ();
 
     fn try_from(args: &[sys::mrb_value]) -> Result<Self, Self::Error> {
-        if args.len() > MRB_FUNCALL_ARGC_MAX {
-            Ok(Self {
-                given: args.len(),
-                max: MRB_FUNCALL_ARGC_MAX,
-            })
-        } else {
-            Err(())
+        // Arg count is ok, so we failed ton construct the error.
+        if args.len() <= MRB_FUNCALL_ARGC_MAX {
+            return Err(());
         }
+        let err = Self {
+            given: args.len(),
+            max: MRB_FUNCALL_ARGC_MAX,
+        };
+        Ok(err)
     }
 }
 
@@ -370,8 +355,11 @@ impl From<ArgCountError> for Error {
 
 #[cfg(test)]
 mod tests {
+    use core::panic;
+
     use bstr::ByteSlice;
 
+    use super::{ArgCountError, MRB_FUNCALL_ARGC_MAX};
     use crate::gc::MrbGarbageCollection;
     use crate::test::prelude::*;
 
@@ -650,5 +638,83 @@ mod tests {
         assert!(basic_object.respond_to(&mut interp, "__send__").unwrap());
         assert!(!basic_object.respond_to(&mut interp, "class").unwrap());
         assert!(!basic_object.respond_to(&mut interp, "zyxw_not_a_method").unwrap());
+    }
+
+    #[test]
+    fn arg_count_error_no_error_for_valid_count_values() {
+        // Construct a vector of Values with exactly the maximum allowed arguments.
+        let args = vec![Value::nil(); MRB_FUNCALL_ARGC_MAX];
+        // Expect conversion to fail, meaning no error should be constructed.
+        let err = ArgCountError::try_from(args.as_slice());
+        assert!(
+            err.is_err(),
+            "Expected no ArgCountError for {MRB_FUNCALL_ARGC_MAX} arguments",
+        );
+    }
+
+    #[test]
+    fn arg_count_error_error_for_excess_count_values() {
+        let count = MRB_FUNCALL_ARGC_MAX + 1;
+        let args = vec![Value::nil(); count];
+        // Expect conversion to succeed and produce an ArgCountError.
+        let err = ArgCountError::try_from(args.as_slice());
+        let arg_err = err.unwrap_or_else(|()| {
+            panic!("Expected an ArgCountError for {count} arguments, but conversion failed");
+        });
+        assert_eq!(arg_err.given, count);
+        assert_eq!(arg_err.max, MRB_FUNCALL_ARGC_MAX);
+    }
+
+    #[test]
+    fn arg_count_error_no_error_for_valid_count_sys_values() {
+        let args: Vec<sys::mrb_value> = vec![Value::nil().inner(); MRB_FUNCALL_ARGC_MAX];
+        // Expect conversion to fail for a valid sys value argument count.
+        let err = ArgCountError::try_from(args.as_slice());
+        assert!(
+            err.is_err(),
+            "Expected no ArgCountError for {MRB_FUNCALL_ARGC_MAX} sys values"
+        );
+    }
+
+    #[test]
+    fn arg_count_error_error_for_excess_count_sys_values() {
+        let count = MRB_FUNCALL_ARGC_MAX + 1;
+        let args: Vec<sys::mrb_value> = vec![Value::nil().inner(); count];
+        // Expect conversion to succeed and produce an ArgCountError for sys values.
+        let arg_err = ArgCountError::try_from(args.as_slice()).unwrap_or_else(|()| {
+            panic!("Expected an ArgCountError for {count} sys values, but conversion failed");
+        });
+        assert_eq!(arg_err.given, count);
+        assert_eq!(arg_err.max, MRB_FUNCALL_ARGC_MAX);
+    }
+
+    #[test]
+    fn arg_count_error_display_format() {
+        let given = MRB_FUNCALL_ARGC_MAX + 2;
+        let error = ArgCountError {
+            given,
+            max: MRB_FUNCALL_ARGC_MAX,
+        };
+        let display = format!("{error}");
+        let expected = format!(
+            "Too many arguments for function call: gave {given} arguments, but Artichoke only supports a maximum of {MRB_FUNCALL_ARGC_MAX} arguments",
+        );
+        assert_eq!(display, expected);
+    }
+
+    #[test]
+    fn integration_funcall_with_excess_arguments() {
+        let mut interp = interpreter();
+        let nil = Value::nil();
+        let args = vec![Value::nil(); MRB_FUNCALL_ARGC_MAX + 1];
+        let result = nil.funcall(&mut interp, "nil?", &args, None);
+        let err = result.expect_err("Expected an error due to too many arguments, but funcall succeeded");
+        // ArgCountError is converted into an Error with name "ArgumentError".
+        assert_eq!(err.name().as_ref(), "ArgumentError");
+        let message = err.message();
+        assert!(
+            message.as_bstr().contains_str("Too many arguments"),
+            "Error message does not indicate too many arguments"
+        );
     }
 }

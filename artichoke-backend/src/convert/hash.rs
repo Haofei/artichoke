@@ -73,23 +73,22 @@ impl TryConvertMut<Option<HashMap<Vec<u8>, Option<Vec<u8>>>>, Value> for Articho
     type Error = Error;
 
     fn try_convert_mut(&mut self, value: Option<HashMap<Vec<u8>, Option<Vec<u8>>>>) -> Result<Value, Self::Error> {
-        if let Some(value) = value {
-            let capa = sys::mrb_int::try_from(value.len()).unwrap_or_default();
+        let Some(value) = value else {
+            return Ok(Value::nil());
+        };
+        let capa = sys::mrb_int::try_from(value.len()).unwrap_or_default();
 
-            let hash = unsafe { self.with_ffi_boundary(|mrb| sys::mrb_hash_new_capa(mrb, capa))? };
-            let hash = self.protect(Value::from(hash));
+        let hash = unsafe { self.with_ffi_boundary(|mrb| sys::mrb_hash_new_capa(mrb, capa))? };
+        let hash = self.protect(Value::from(hash));
 
-            for (key, val) in value {
-                let key = self.try_convert_mut(key)?;
-                let val = self.try_convert_mut(val)?;
-                unsafe {
-                    self.with_ffi_boundary(|mrb| sys::mrb_hash_set(mrb, hash.inner(), key.inner(), val.inner()))?;
-                }
+        for (key, val) in value {
+            let key = self.try_convert_mut(key)?;
+            let val = self.try_convert_mut(val)?;
+            unsafe {
+                self.with_ffi_boundary(|mrb| sys::mrb_hash_set(mrb, hash.inner(), key.inner(), val.inner()))?;
             }
-            Ok(hash)
-        } else {
-            Ok(Value::nil())
         }
+        Ok(hash)
     }
 }
 
@@ -97,22 +96,21 @@ impl TryConvertMut<Value, Vec<(Value, Value)>> for Artichoke {
     type Error = Error;
 
     fn try_convert_mut(&mut self, value: Value) -> Result<Vec<(Value, Value)>, Self::Error> {
-        if let Ruby::Hash = value.ruby_type() {
-            let hash = value.inner();
-            let keys = unsafe { self.with_ffi_boundary(|mrb| sys::mrb_hash_keys(mrb, hash))? };
+        let Ruby::Hash = value.ruby_type() else {
+            return Err(UnboxRubyError::new(&value, Rust::Map).into());
+        };
+        let hash = value.inner();
+        let keys = unsafe { self.with_ffi_boundary(|mrb| sys::mrb_hash_keys(mrb, hash))? };
 
-            let mut keys = self.protect(Value::from(keys));
-            let array = unsafe { Array::unbox_from_value(&mut keys, self) }?;
+        let mut keys = self.protect(Value::from(keys));
+        let array = unsafe { Array::unbox_from_value(&mut keys, self) }?;
 
-            let mut pairs = Vec::with_capacity(array.len());
-            for key in &*array {
-                let value = unsafe { self.with_ffi_boundary(|mrb| sys::mrb_hash_get(mrb, hash, key.inner()))? };
-                pairs.push((key, self.protect(Value::from(value))));
-            }
-            Ok(pairs)
-        } else {
-            Err(UnboxRubyError::new(&value, Rust::Map).into())
+        let mut pairs = Vec::with_capacity(array.len());
+        for key in &*array {
+            let value = unsafe { self.with_ffi_boundary(|mrb| sys::mrb_hash_get(mrb, hash, key.inner()))? };
+            pairs.push((key, self.protect(Value::from(value))));
         }
+        Ok(pairs)
     }
 }
 

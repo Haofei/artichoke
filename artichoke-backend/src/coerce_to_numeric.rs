@@ -24,36 +24,39 @@ impl CoerceToNumeric for Artichoke {
             Ruby::Nil => return Err(TypeError::with_message("can't convert nil into Float").into()),
             _ => {}
         }
+
         // TODO: This branch should use `numeric::coerce`
         let class_of_numeric = self.eval(b"Numeric")?;
         let is_a_numeric = value.funcall(self, "is_a?", &[class_of_numeric], None)?;
         let is_a_numeric = self.try_convert(is_a_numeric);
-        if let Ok(true) = is_a_numeric {
-            if !value.respond_to(self, "to_f")? {
-                let mut message = String::from("can't convert ");
-                message.push_str(self.inspect_type_name_for_value(value));
-                message.push_str(" into Float");
-                return Err(TypeError::from(message).into());
-            }
-            let coerced = value.funcall(self, "to_f", &[], None)?;
-            if let Ruby::Float = coerced.ruby_type() {
-                coerced.try_convert_into::<f64>(self)
-            } else {
-                let mut message = String::from("can't convert ");
-                let name = self.inspect_type_name_for_value(value);
-                message.push_str(name);
-                message.push_str(" into Float (");
-                message.push_str(name);
-                message.push_str("#to_f gives ");
-                message.push_str(self.inspect_type_name_for_value(coerced));
-                message.push(')');
-                Err(TypeError::from(message).into())
-            }
-        } else {
+
+        let Ok(true) = is_a_numeric else {
             let mut message = String::from("can't convert ");
             message.push_str(self.inspect_type_name_for_value(value));
             message.push_str(" into Float");
-            Err(TypeError::from(message).into())
+            return Err(TypeError::from(message).into());
+        };
+
+        if !value.respond_to(self, "to_f")? {
+            let mut message = String::from("can't convert ");
+            message.push_str(self.inspect_type_name_for_value(value));
+            message.push_str(" into Float");
+            return Err(TypeError::from(message).into());
         }
+
+        let coerced = value.funcall(self, "to_f", &[], None)?;
+        let Ruby::Float = coerced.ruby_type() else {
+            let mut message = String::from("can't convert ");
+            let name = self.inspect_type_name_for_value(value);
+            message.push_str(name);
+            message.push_str(" into Float (");
+            message.push_str(name);
+            message.push_str("#to_f gives ");
+            message.push_str(self.inspect_type_name_for_value(coerced));
+            message.push(')');
+            return Err(TypeError::from(message).into());
+        };
+
+        coerced.try_convert_into::<f64>(self)
     }
 }

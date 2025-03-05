@@ -51,12 +51,11 @@ unsafe extern "C-unwind" fn mrb_intern_cstr(mrb: *mut sys::mrb_state, name: *con
 unsafe extern "C-unwind" fn mrb_intern_str(mrb: *mut sys::mrb_state, name: sys::mrb_value) -> sys::mrb_sym {
     unwrap_interpreter!(mrb, to => guard, or_else = 0);
     let name = Value::from(name);
-    if let Ok(bytes) = name.try_convert_into_mut::<Vec<u8>>(&mut guard) {
-        let sym = guard.intern_bytes(bytes);
-        sym.unwrap_or_default()
-    } else {
-        0
-    }
+    let Ok(bytes) = name.try_convert_into_mut::<Vec<u8>>(&mut guard) else {
+        return 0;
+    };
+    let sym = guard.intern_bytes(bytes);
+    sym.unwrap_or_default()
 }
 
 /* `mrb_intern_check` series functions returns 0 if the symbol is not defined */
@@ -72,11 +71,10 @@ unsafe extern "C-unwind" fn mrb_intern_check(
 ) -> sys::mrb_sym {
     let bytes = slice::from_raw_parts(name.cast::<u8>(), len);
     unwrap_interpreter!(mrb, to => guard, or_else = 0);
-    if let Ok(Some(sym)) = guard.check_interned_bytes(bytes) {
-        sym
-    } else {
-        0
-    }
+    let Ok(Some(sym)) = guard.check_interned_bytes(bytes) else {
+        return 0;
+    };
+    sym
 }
 
 // ```c
@@ -87,11 +85,10 @@ unsafe extern "C-unwind" fn mrb_intern_check_cstr(mrb: *mut sys::mrb_state, name
     let string = CStr::from_ptr(name);
     let bytes = string.to_bytes_with_nul();
     unwrap_interpreter!(mrb, to => guard, or_else = 0);
-    if let Ok(Some(sym)) = guard.check_interned_bytes_with_trailing_nul(bytes) {
-        sym
-    } else {
-        0
-    }
+    let Ok(Some(sym)) = guard.check_interned_bytes_with_trailing_nul(bytes) else {
+        return 0;
+    };
+    sym
 }
 
 // ```c
@@ -101,12 +98,13 @@ unsafe extern "C-unwind" fn mrb_intern_check_cstr(mrb: *mut sys::mrb_state, name
 unsafe extern "C-unwind" fn mrb_intern_check_str(mrb: *mut sys::mrb_state, name: sys::mrb_value) -> sys::mrb_sym {
     unwrap_interpreter!(mrb, to => guard, or_else = 0);
     let name = Value::from(name);
-    if let Ok(bytes) = name.try_convert_into_mut::<&[u8]>(&mut guard) {
-        if let Ok(Some(sym)) = guard.check_interned_bytes(bytes) {
-            return sym;
-        }
-    }
-    0
+    let Ok(bytes) = name.try_convert_into_mut::<&[u8]>(&mut guard) else {
+        return 0;
+    };
+    let Ok(Some(sym)) = guard.check_interned_bytes(bytes) else {
+        return 0;
+    };
+    sym
 }
 
 // `mrb_check_intern` series functions returns `nil` if the symbol is not
@@ -123,12 +121,10 @@ unsafe extern "C-unwind" fn mrb_check_intern(
 ) -> sys::mrb_value {
     let bytes = slice::from_raw_parts(name.cast::<u8>(), len);
     unwrap_interpreter!(mrb, to => guard);
-    let symbol = if let Ok(Some(sym)) = guard.check_interned_bytes(bytes) {
-        Symbol::alloc_value(sym.into(), &mut guard).unwrap_or_default()
-    } else {
-        Value::nil()
+    let Ok(Some(sym)) = guard.check_interned_bytes(bytes) else {
+        return Value::nil().inner();
     };
-    symbol.inner()
+    Symbol::alloc_value(sym.into(), &mut guard).unwrap_or_default().inner()
 }
 
 // ```c
@@ -139,12 +135,10 @@ unsafe extern "C-unwind" fn mrb_check_intern_cstr(mrb: *mut sys::mrb_state, name
     let string = CStr::from_ptr(name);
     let bytes = string.to_bytes_with_nul();
     unwrap_interpreter!(mrb, to => guard);
-    let symbol = if let Ok(Some(sym)) = guard.check_interned_bytes_with_trailing_nul(bytes) {
-        Symbol::alloc_value(sym.into(), &mut guard).unwrap_or_default()
-    } else {
-        Value::nil()
+    let Ok(Some(sym)) = guard.check_interned_bytes_with_trailing_nul(bytes) else {
+        return Value::nil().inner();
     };
-    symbol.inner()
+    Symbol::alloc_value(sym.into(), &mut guard).unwrap_or_default().inner()
 }
 
 // ```c
@@ -154,16 +148,13 @@ unsafe extern "C-unwind" fn mrb_check_intern_cstr(mrb: *mut sys::mrb_state, name
 unsafe extern "C-unwind" fn mrb_check_intern_str(mrb: *mut sys::mrb_state, name: sys::mrb_value) -> sys::mrb_value {
     unwrap_interpreter!(mrb, to => guard);
     let name = Value::from(name);
-    let symbol = if let Ok(bytes) = name.try_convert_into_mut::<&[u8]>(&mut guard) {
-        if let Ok(Some(sym)) = guard.check_interned_bytes(bytes) {
-            Symbol::alloc_value(sym.into(), &mut guard).unwrap_or_default()
-        } else {
-            Value::nil()
-        }
-    } else {
-        Value::nil()
+    let Ok(bytes) = name.try_convert_into_mut::<&[u8]>(&mut guard) else {
+        return Value::nil().inner();
     };
-    symbol.inner()
+    let Ok(Some(sym)) = guard.check_interned_bytes(bytes) else {
+        return Value::nil().inner();
+    };
+    Symbol::alloc_value(sym.into(), &mut guard).unwrap_or_default().inner()
 }
 
 // ```c
@@ -172,11 +163,10 @@ unsafe extern "C-unwind" fn mrb_check_intern_str(mrb: *mut sys::mrb_state, name:
 #[unsafe(no_mangle)]
 unsafe extern "C-unwind" fn mrb_sym_name(mrb: *mut sys::mrb_state, sym: sys::mrb_sym) -> *const c_char {
     unwrap_interpreter!(mrb, to => guard, or_else = ptr::null());
-    if let Ok(Some(bytes)) = guard.lookup_symbol_with_trailing_nul(sym) {
-        bytes.as_ptr().cast::<c_char>()
-    } else {
-        ptr::null()
-    }
+    let Ok(Some(bytes)) = guard.lookup_symbol_with_trailing_nul(sym) else {
+        return ptr::null();
+    };
+    bytes.as_ptr().cast::<c_char>()
 }
 
 // ```c
@@ -192,18 +182,16 @@ unsafe extern "C-unwind" fn mrb_sym_name_len(
         ptr::write(lenp, 0);
     }
     unwrap_interpreter!(mrb, to => guard, or_else = ptr::null());
-    if let Ok(Some(bytes)) = guard.lookup_symbol(sym) {
-        if !lenp.is_null() {
-            if let Ok(len) = sys::mrb_int::try_from(bytes.len()) {
-                ptr::write(lenp, len);
-            } else {
-                return ptr::null();
-            }
-        }
-        bytes.as_ptr().cast()
-    } else {
-        ptr::null()
+    let Ok(Some(bytes)) = guard.lookup_symbol(sym) else {
+        return ptr::null();
+    };
+    if !lenp.is_null() {
+        let Ok(len) = sys::mrb_int::try_from(bytes.len()) else {
+            return ptr::null();
+        };
+        ptr::write(lenp, len);
     }
+    bytes.as_ptr().cast()
 }
 
 // ```c
@@ -212,17 +200,19 @@ unsafe extern "C-unwind" fn mrb_sym_name_len(
 #[unsafe(no_mangle)]
 unsafe extern "C-unwind" fn mrb_sym_dump(mrb: *mut sys::mrb_state, sym: sys::mrb_sym) -> *const c_char {
     unwrap_interpreter!(mrb, to => guard, or_else = ptr::null());
-    if let Ok(Some(bytes)) = guard.lookup_symbol(sym) {
-        let bytes = bytes.to_vec();
-        // Allocate a buffer with the lifetime of the interpreter and return
-        // a pointer to it.
-        if let Ok(string) = guard.try_convert_mut(bytes) {
-            if let Ok(bytes) = string.try_convert_into_mut::<&[u8]>(&mut guard) {
-                return bytes.as_ptr().cast();
-            }
-        }
-    }
-    ptr::null()
+    let Ok(Some(bytes)) = guard.lookup_symbol(sym) else {
+        return ptr::null();
+    };
+    let bytes = bytes.to_vec();
+    // Allocate a buffer with the lifetime of the interpreter and return
+    // a pointer to it.
+    let Ok(string) = guard.try_convert_mut(bytes) else {
+        return ptr::null();
+    };
+    let Ok(bytes) = string.try_convert_into_mut::<&[u8]>(&mut guard) else {
+        return ptr::null();
+    };
+    bytes.as_ptr().cast()
 }
 
 // ```c
