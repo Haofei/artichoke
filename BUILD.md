@@ -5,9 +5,8 @@ To build Artichoke, install the [prerequisites](#prerequisites) and run:
 ```console
 $ git clone https://github.com/artichoke/artichoke.git
 $ cd ./artichoke
-$ cargo build --release
-$ ./target/release/artichoke --version
-artichoke 0.1.0-pre.0
+$ cargo run --bin artichoke -- --version
+$ cargo run --bin airb
 ```
 
 ## WebAssembly
@@ -25,16 +24,20 @@ This on its own does not produce a usable artifact. To build a WebAssembly
 bundle, depend on `artichoke` in a crate with a main. See the
 [artichoke/playground] repository for an example.
 
+[artichoke/playground]: https://github.com/artichoke/playground
+
 ## Prerequisites
 
 ### Rust Toolchain
 
 Artichoke is a collection of Rust crates and requires a Rust compiler. The
-specific version of Rust Artichoke requires is specified in the
-[toolchain file](rust-toolchain.toml).
+specific version of Rust Artichoke requires is specified in the [toolchain
+file].
 
 Artichoke only guarantees support for the latest stable version of the Rust
 compiler.
+
+[toolchain file]: rust-toolchain.toml
 
 #### Installation
 
@@ -47,13 +50,15 @@ rustup-init
 ```
 
 On Windows, you can install rustup from the official site and follow the
-prompts: <https://rustup.rs/>. This requires a download of Visual Studio (the
-[Community Edition][vs-community] is sufficient) and several C++ packages
-selected through the VS component installer. (I'm not sure which packages are
-required; I selected them all.)
+prompts: <https://win.rustup.rs/>. This will automatically install Visual Studio
+(the [Community Edition][vs-community]) and several C++ packages selected
+through the VS component installer.
 
-When running any subsequent `cargo` commands, rustup will ensure the correct
-version of the toolchain is installed.
+Once rustup is installed, ensure the correct toolchain is present by running:
+
+```sh
+rustup install
+```
 
 It is recommended to install `rustfmt` and `clippy` to help with static code
 analysis and to do relevant checks prior to submitting PRs.
@@ -62,11 +67,31 @@ analysis and to do relevant checks prior to submitting PRs.
 rustup component add rustfmt clippy
 ```
 
+[rustup]: https://rustup.rs/
+[homebrew]: https://docs.brew.sh/Installation
+[vs-community]: https://visualstudio.microsoft.com/vs/community/
+
 ### Bindgen
 
 Artichoke generates Rust declarations for C code at build time using
 [`bindgen`]. `bindgen` is a build dependency of `artichoke-backend` and the
 bindgen CLI is not required to be present on `$PATH`.
+
+Bindgen requires a `libclang` shared object to be discoverable. On macOS, no
+steps are necessary, but you may wish to install the lates LLVM, which you can
+do with [Homebrew]:
+
+```sh
+brew install llvm
+```
+
+On Windows, install LLVM from `winget`:
+
+```powershell
+winget install --id=LLVM.LLVM -e
+```
+
+[`bindgen`]: https://github.com/rust-lang/rust-bindgen
 
 ### Rust Crates
 
@@ -80,9 +105,8 @@ cargo build --workspace
 
 ### C Toolchain
 
-Some artichoke dependencies, like the mruby [`sys`](artichoke-backend/src/sys)
-FFI bindings and the [`onig`] crate, build C static libraries and require a C
-compiler.
+Some artichoke dependencies, like the mruby [`sys`] FFI bindings and the
+[`onig`] crate, build C static libraries and require a C compiler.
 
 Artichoke specifically requires clang. WebAssembly targets require clang-8 or
 newer.
@@ -90,11 +114,18 @@ newer.
 On Windows, install the latest LLVM distribution from GitHub and add LLVM to
 your PATH: <https://github.com/llvm/llvm-project/releases>.
 
+[`sys`]: artichoke-backend/src/sys
+[`onig`]: https://crates.io/crates/onig
+
 #### `cc` Crate
 
 Artichoke and some of its dependencies use the Rust [`cc` crate] to build. `cc`
 uses a [platform-dependent C compiler] to compile C sources. On Unix, `cc` crate
 uses the `cc` binary.
+
+[`cc` crate]: https://crates.io/crates/cc
+[platform-dependent c compiler]:
+  https://github.com/alexcrichton/cc-rs#compile-time-requirements
 
 ### mruby Bindings
 
@@ -106,13 +137,3 @@ default, mruby requires the following to compile:
 
 You can override the requirement for clang by setting the `CC` and `LD`
 environment variables.
-
-[artichoke/playground]: https://github.com/artichoke/playground
-[rustup]: https://rustup.rs/
-[homebrew]: https://docs.brew.sh/Installation
-[vs-community]: https://visualstudio.microsoft.com/vs/community/
-[`bindgen`]: https://github.com/rust-lang/rust-bindgen
-[`onig`]: https://crates.io/crates/onig
-[`cc` crate]: https://crates.io/crates/cc
-[platform-dependent c compiler]:
-  https://github.com/alexcrichton/cc-rs#compile-time-requirements
