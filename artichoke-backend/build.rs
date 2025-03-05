@@ -74,6 +74,8 @@ mod libs {
     use std::str;
     use std::thread;
 
+    use bindgen::Abi;
+
     use super::paths;
     use crate::Wasm;
 
@@ -272,6 +274,7 @@ mod libs {
             .allowlist_var("^MRUBY.*")
             .rustified_enum("^mrb.*")
             .generate_comments(false)
+            .override_abi(Abi::CUnwind, "^mrb.*")
             .clang_args([
                 "-DARTICHOKE",
                 "-DMRB_ARY_NO_EMBED",
