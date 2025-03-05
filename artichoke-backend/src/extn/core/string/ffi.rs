@@ -1,6 +1,6 @@
 use core::char;
 use core::convert::TryFrom;
-use core::hash::{BuildHasher, Hash, Hasher};
+use core::hash::BuildHasher;
 use core::num::Wrapping;
 use core::ptr;
 use core::slice;
@@ -657,16 +657,20 @@ unsafe extern "C-unwind" fn mrb_str_cat(
 unsafe extern "C-unwind" fn mrb_str_hash(mrb: *mut sys::mrb_state, s: sys::mrb_value) -> u32 {
     unwrap_interpreter!(mrb, to => guard, or_else = 0);
     let mut s = Value::from(s);
-    let Ok(global_build_hasher) = guard.global_build_hasher() else {
-        return 0;
-    };
-    let mut hasher = global_build_hasher.build_hasher();
 
     let Ok(s) = String::unbox_from_value(&mut s, &mut guard) else {
         return 0;
     };
-    s.as_slice().hash(&mut hasher);
-    let hash = hasher.finish();
+
+    // NOTE: it is necessary to retrieve the interpreter `BuildHasher` second to
+    // avoid a duplicate borrow error. `Artichoke::global_build_hasher` requires
+    // a shared reference which the previous mutable borrow will coerce to, but
+    // the other ordering will not compile.
+    let Ok(global_build_hasher) = guard.global_build_hasher() else {
+        return 0;
+    };
+
+    let hash = global_build_hasher.hash_one(s.as_slice());
     // Grab some bytes from the `u64` to construct a `u32` hash.
     let [one, two, three, four, ..] = hash.to_ne_bytes();
     u32::from_ne_bytes([one, two, three, four])

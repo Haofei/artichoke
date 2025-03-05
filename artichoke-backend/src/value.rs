@@ -648,8 +648,7 @@ mod tests {
         let err = ArgCountError::try_from(args.as_slice());
         assert!(
             err.is_err(),
-            "Expected no ArgCountError for {} arguments",
-            MRB_FUNCALL_ARGC_MAX
+            "Expected no ArgCountError for {MRB_FUNCALL_ARGC_MAX} arguments",
         );
     }
 
@@ -659,8 +658,9 @@ mod tests {
         let args = vec![Value::nil(); count];
         // Expect conversion to succeed and produce an ArgCountError.
         let err = ArgCountError::try_from(args.as_slice());
-        assert!(err.is_ok(), "Expected an ArgCountError for {} arguments", count);
-        let arg_err = err.unwrap();
+        let arg_err = err.unwrap_or_else(|()| {
+            panic!("Expected an ArgCountError for {count} arguments, but conversion failed");
+        });
         assert_eq!(arg_err.given, count);
         assert_eq!(arg_err.max, MRB_FUNCALL_ARGC_MAX);
     }
@@ -672,8 +672,7 @@ mod tests {
         let err = ArgCountError::try_from(args.as_slice());
         assert!(
             err.is_err(),
-            "Expected no ArgCountError for {} sys values",
-            MRB_FUNCALL_ARGC_MAX
+            "Expected no ArgCountError for {MRB_FUNCALL_ARGC_MAX} sys values"
         );
     }
 
@@ -696,7 +695,7 @@ mod tests {
             given,
             max: MRB_FUNCALL_ARGC_MAX,
         };
-        let display = format!("{}", error);
+        let display = format!("{error}");
         let expected = format!(
             "Too many arguments for function call: gave {given} arguments, but Artichoke only supports a maximum of {MRB_FUNCALL_ARGC_MAX} arguments",
         );
