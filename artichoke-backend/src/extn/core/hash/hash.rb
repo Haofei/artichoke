@@ -269,16 +269,20 @@ class Hash
 
     h = dup
     if block
-      other.each_key do |k|
-        if key?(k)
-          block.call(k, self[k], other[k])
+      other.each do |k, new_val|
+        if h.key?(k)
+          old_val = h[k]
+          h[k] = block.call(k, old_val, new_val)
         else
-          other[k]
+          h[k] = new_val
         end
       end
     else
-      other.each_key { |k| h[k] = other[k] }
+      other.each do |k, new_val|
+        h[k] = new_val
+      end
     end
+
     h
   end
 
