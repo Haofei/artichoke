@@ -43,6 +43,24 @@ module Artichoke
       "{#{out.join(', ')}}"
     end
     # rubocop:enable Lint/HashCompareByIdentity
+
+    def self.implicit_conversion(target)
+      return target if target.is_a?(::Hash)
+      raise TypeError, 'no implicit conversion of nil into Hash' if target.nil?
+
+      converted = target.to_hash
+      return converted if converted.is_a?(::Hash)
+
+      inspect_name = target.class.name
+      inspect_name = target.inspect if target.is_a?(TrueClass) || target.is_a?(FalseClass) || target.nil?
+      message = "can't convert #{inspect_name} to Hash (#{inspect_name}#to_hash gives #{converted.class})"
+      raise TypeError, message
+    rescue NoMethodError
+      inspect_name = target.class.name
+      inspect_name = target.inspect if target.is_a?(TrueClass) || target.is_a?(FalseClass) || target.nil?
+      message = "no implicit conversion of #{inspect_name} into Hash"
+      raise TypeError, message
+    end
   end
 end
 
@@ -265,41 +283,56 @@ class Hash
   end
 
   def merge(other, &block)
-    raise TypeError, "Hash required (#{other.class} given)" unless other.is_a?(Hash)
+    other = ::Artichoke::Hash.implicit_conversion(other)
 
     h = dup
     if block
-      other.each_key do |k|
-        if key?(k)
-          block.call(k, self[k], other[k])
+      other.each do |k, new_val|
+        if h.key?(k)
+          old_val = h[k]
+          h[k] = block.call(k, old_val, new_val)
         else
-          other[k]
+          h[k] = new_val
         end
       end
     else
-      other.each_key { |k| h[k] = other[k] }
+      other.each do |k, new_val|
+        h[k] = new_val
+      end
     end
+
     h
   end
 
-  def merge!(*others, &block)
-    i = 0
-    len = others.size
-    return __merge(*others) unless block
+  def merge!(*others)
+    # If no arguments at all, just return self
+    return self if others.empty?
 
-    while i < len
-      other = others[i]
-      i += 1
-      raise TypeError, "Hash required (#{other.class} given)" unless other.is_a?(Hash)
+    # If a block is given, yield on duplicates
+    if block_given?
+      others.each do |other|
+        other = ::Artichoke::Hash.implicit_conversion(other)
 
-      if block
-        other.each_key do |k|
-          self[k] = key?(k) ? block.call(k, self[k], other[k]) : other[k]
+        other.each do |k, new_val|
+          self[k] =
+            if key?(k)
+              yield(k, self[k], new_val)
+            else
+              new_val
+            end
         end
-      else
-        other.each_key { |k| self[k] = other[k] }
+      end
+    else
+      # No block
+      others.each do |other|
+        other = ::Artichoke::Hash.implicit_conversion(other)
+
+        other.each do |k, new_val|
+          self[k] = new_val
+        end
       end
     end
+
     self
   end
 
@@ -326,15 +359,18 @@ class Hash
     self
   end
 
-  def replace(hash)
-    raise TypeError, "Hash required (#{hash.class} given)" unless hash.is_a?(Hash)
+  def replace(other_hash)
+    # If other is exactly self, do nothing.
+    return self if other_hash.equal?(self)
+
+    other_hash = ::Artichoke::Hash.implicit_conversion(other_hash)
 
     clear
-    hash.each_key { |k| self[k] = hash[k] }
-    if hash.default_proc
-      self.default_proc = hash.default_proc
+    other_hash.each_key { |k| self[k] = other_hash[k] }
+    if other_hash.default_proc
+      self.default_proc = other_hash.default_proc
     else
-      self.default = hash.default
+      self.default = other_hash.default
     end
     self
   end

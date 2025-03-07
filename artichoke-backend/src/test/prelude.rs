@@ -86,6 +86,7 @@ pub fn unwrap_or_panic_with_backtrace<T>(interp: &mut Artichoke, subject: &str, 
         Err(exc) => {
             let backtrace = exc.vm_backtrace(interp);
             let name = exc.name();
+
             let backtrace = backtrace
                 .unwrap_or_default()
                 .into_iter()
@@ -95,12 +96,20 @@ pub fn unwrap_or_panic_with_backtrace<T>(interp: &mut Artichoke, subject: &str, 
                 })
                 .collect::<Vec<_>>();
             let backtrace = backtrace.join("\n");
+
+            let exception_message = exc
+                .message()
+                .as_bstr()
+                .lines()
+                .map(|exception_message_line| {
+                    let line = format!("{:?}", exception_message_line.as_bstr());
+                    format!("        {}", &line[1..line.len() - 1])
+                })
+                .collect::<Vec<_>>();
+            let exception_message = exception_message.join("\n");
+
             panic!(
-                "\n{} tests failed with {} exception\n    message: {:?}\n    backtrace:\n{}\n",
-                subject,
-                name,
-                exc.message().as_bstr(),
-                backtrace
+                "\n{subject} tests failed with {name} exception\n    message: \n{exception_message}\n    backtrace:\n{backtrace}\n",
             );
         }
     }
