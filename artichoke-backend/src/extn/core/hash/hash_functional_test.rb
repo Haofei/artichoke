@@ -60,6 +60,19 @@ def spec
   test_hash_merge_bang_non_coercible
   test_hash_merge_bang_multi_arg_coercion_with_collisions
 
+  test_hash_replace_implicit_conversion_success
+  test_hash_replace_implicit_conversion_non_hash
+  test_hash_replace_implicit_conversion_nil
+  test_hash_replace_implicit_conversion_raises
+  test_hash_replace_implicit_conversion_non_coercible
+
+  test_hash_replace_basic
+  test_hash_replace_with_default_proc
+  test_hash_replace_with_default_value
+  test_hash_replace_same_object
+
+  test_hash_frozen_error_on_mutating_methods
+
   # If all tests pass, return a truthy value
   true
 end
@@ -839,6 +852,186 @@ def test_hash_merge_bang_multi_arg_coercion_with_collisions
   return if base == expected
 
   raise "Expected multi-arg merge with collisions, got #{base.inspect}"
+end
+
+def test_hash_replace_implicit_conversion_success
+  base = { old_key: 99 }
+  obj  = Artichoke::FunctionalTests::HashCoercible.new
+  returned = base.replace(obj)
+  raise 'Expected #replace to return self, not a new object' unless returned.equal?(base)
+  return if base == { coerced_key: 'coerced_value' }
+
+  raise "Expected base to be replaced with coerced hash, got #{base.inspect}"
+end
+
+def test_hash_replace_implicit_conversion_non_hash
+  base = { a: 1 }
+  obj  = Artichoke::FunctionalTests::HashCoercibleNonHash.new
+  begin
+    base.replace(obj)
+    raise 'Expected TypeError from #to_hash => 123, but none was raised!'
+  rescue TypeError
+    # pass
+  end
+end
+
+def test_hash_replace_implicit_conversion_nil
+  base = { a: 1 }
+  obj  = Artichoke::FunctionalTests::HashCoercibleNil.new
+  begin
+    base.replace(obj)
+    raise 'Expected TypeError from #to_hash => nil, but none was raised!'
+  rescue TypeError
+    # pass
+  end
+end
+
+def test_hash_replace_implicit_conversion_raises
+  base = { a: 1 }
+  obj  = Artichoke::FunctionalTests::HashCoercibleRaise.new
+  begin
+    base.replace(obj)
+    raise 'Expected RuntimeError from #to_hash, but none was raised!'
+  rescue RuntimeError => e
+    raise "Unexpected message: #{e.message.inspect}" unless e.message == 'Intentional error in to_hash'
+  end
+end
+
+def test_hash_replace_implicit_conversion_non_coercible
+  base = { a: 1 }
+  obj  = Artichoke::FunctionalTests::HashNonCoercible.new
+  begin
+    base.replace(obj)
+    raise 'Expected TypeError for an object without #to_hash, but none was raised!'
+  rescue TypeError
+    # pass
+  end
+end
+
+def test_hash_replace_basic
+  h = { a: 1, b: 2, default: :old_default }
+  h.default = :old_default
+  # Let's define a custom default_proc to ensure we overwrite it
+  # if you prefer a default_proc test. We'll do a separate test below.
+
+  other = { x: 100, y: 200 }
+  other.default = :new_default
+
+  returned = h.replace(other)
+  raise 'Expected #replace to return self, got a different object!' unless returned.equal?(h)
+
+  # The keys should be replaced
+  raise "Expected h to have [:x, :y] after replace, got #{h.keys.inspect}" unless h.keys.sort == %i[x y]
+  raise 'Expected h[:x] == 100, h[:y] == 200' unless h[:x] == 100 && h[:y] == 200
+
+  # Default is replaced
+  return if h.default == :new_default
+
+  raise "Expected default to be replaced with :new_default, got #{h.default.inspect}"
+end
+
+def test_hash_replace_with_default_proc
+  h = { a: 1 }
+  h.default = :old_def
+
+  other = { b: 2 }
+  other.default_proc = proc { |hash, key| "computed-#{key}" }
+
+  h.replace(other)
+  raise 'Expected h to have only key :b after replace' unless h.keys == [:b]
+  raise 'Expected default_proc to be copied, but h.default_proc is nil' unless h.default_proc
+
+  # Call the default_proc to verify it
+  val = h[:missing]
+  return if val == 'computed-missing'
+
+  raise "Expected default_proc to compute 'computed-missing', got #{val.inspect}"
+end
+
+def test_hash_replace_with_default_value
+  h = {}
+  h.default_proc = proc { |_h, k| raise 'Should not happen' }
+
+  other = {}
+  other.default = :simple_def
+
+  h.replace(other)
+  raise "Expected h.default_proc to be cleared (no block), but got #{h.default_proc.inspect}" unless h.default_proc.nil?
+  return if h.default == :simple_def
+
+  raise "Expected h.default to be :simple_def, got #{h.default.inspect}"
+end
+
+def test_hash_replace_same_object
+  h = { x: 1, y: 2 }
+  ret = h.replace(h) # from MRI doc: replacing with the same object is effectively no-op
+  raise 'Expected #replace to return self' unless ret.equal?(h)
+  # No changes
+  return if h == { x: 1, y: 2 }
+
+  raise "Expected no change if replacing with itself, but got #{h.inspect}"
+end
+
+def test_hash_frozen_error_on_mutating_methods
+  # Prepare a hash and freeze it
+  h = { a: 1 }
+  h.freeze
+
+  # Simple helper to DRY up the rescue logic
+  expect_frozen_error = lambda do |label, &blk|
+    blk.call
+    raise "Expected FrozenError calling: #{label}, but no error was raised!"
+  rescue FrozenError
+    # pass, this is expected
+  end
+
+  # 1. Element assignment: `h[:b] = 2`
+  expect_frozen_error.call('[]= store') do
+    h[:b] = 2
+  end
+
+  # 2. Delete a key
+  expect_frozen_error.call('delete(:a)') do
+    h.delete(:a)
+  end
+
+  # 3. Shift
+  expect_frozen_error.call('shift') do
+    h.shift
+  end
+
+  # 4. Clear
+  expect_frozen_error.call('clear') do
+    h.clear
+  end
+
+  # 5. In-place merge
+  expect_frozen_error.call('merge!') do
+    h.merge!(b: 2)
+  end
+
+  # 6. Replace
+  expect_frozen_error.call('replace') do
+    h.replace({})
+  end
+
+  # 7. Rehash
+  expect_failure_if_artichoke(RuntimeError, 'Expected FrozenError calling: rehash, but no error was raised!') do
+    # https://github.com/mruby/mruby/issues/6485
+    expect_frozen_error.call('rehash') do
+      h.rehash
+    end
+  end
+
+  # 8. Set a simple default
+  expect_frozen_error.call('default=') do
+    h.default = :some_value
+  end
+
+  # 9. Set a default proc
+  expect_frozen_error.call('default_proc=') do
+    h.default_proc = proc { |_, _| 'anything' }
+  end
 end
 
 # Optionally, you can auto-run the spec if this file is loaded as a script:

@@ -359,15 +359,18 @@ class Hash
     self
   end
 
-  def replace(hash)
-    raise TypeError, "Hash required (#{hash.class} given)" unless hash.is_a?(Hash)
+  def replace(other_hash)
+    # If other is exactly self, do nothing.
+    return self if other_hash.equal?(self)
+
+    other_hash = ::Artichoke::Hash.implicit_conversion(other_hash)
 
     clear
-    hash.each_key { |k| self[k] = hash[k] }
-    if hash.default_proc
-      self.default_proc = hash.default_proc
+    other_hash.each_key { |k| self[k] = other_hash[k] }
+    if other_hash.default_proc
+      self.default_proc = other_hash.default_proc
     else
-      self.default = hash.default
+      self.default = other_hash.default
     end
     self
   end
