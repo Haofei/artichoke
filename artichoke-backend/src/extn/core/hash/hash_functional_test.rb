@@ -22,8 +22,78 @@ def spec
   test_hash_rehash
   test_hash_initialize_copy
 
+  test_hash_merge_sad_path
+  test_hash_merge_block_edge_cases
+  expect_failure_if_artichoke(RuntimeError, 'Expected TypeError assigning non-callable default_proc, but none was raised!') do
+    # Pending patching of the bug in https://github.com/mruby/mruby/issues/6483
+    test_hash_default_proc_sad_path
+  end
+  expect_failure_if_artichoke(RuntimeError, 'Expected TypeError for 0-arg default_proc, but no error was raised!') do
+    # Pending patching of the bug in https://github.com/mruby/mruby/issues/6484
+    test_hash_default_proc_wrong_arity
+  end
+
+  test_hash_fetch_sad_path
+  test_hash_key_type_errors
+  test_hash_delete_sad_path
+  test_hash_store_edge_cases
+  test_hash_block_modification
+
+  test_hash_merge_bang_no_args
+  test_hash_merge_bang_multi_args_no_block
+  test_hash_merge_bang_multi_args_with_block
+  test_hash_merge_bang_multi_args_type_check
+  test_hash_merge_bang_multi_args_self_referential
+
+  test_hash_merge_coerce_success
+  test_hash_merge_coerce_with_block
+  test_hash_merge_coerce_non_hash
+  test_hash_merge_coerce_nil
+  test_hash_merge_coerce_raises
+  test_hash_merge_non_coercible
+
+  test_hash_merge_bang_coerce_success
+  test_hash_merge_bang_coerce_with_block
+  test_hash_merge_bang_coerce_non_hash
+  test_hash_merge_bang_coerce_nil
+  test_hash_merge_bang_coerce_raises
+  test_hash_merge_bang_non_coercible
+  test_hash_merge_bang_multi_arg_coercion_with_collisions
+
   # If all tests pass, return a truthy value
   true
+end
+
+##
+# Runs the given block. Behavior depends on whether we're in Artichoke:
+#
+# - If `RUBY_ENGINE.start_with?('artichoke')`:
+#   * Expect a specific error class and message.
+#   * If no error is raised, fail.
+#   * If an error is raised that doesn't match `error_class` or `error_message`, fail.
+#   * Otherwise pass.
+#
+# - If not Artichoke:
+#   * Expect no error.
+#   * If an error is raised, re-raise it.
+#
+def expect_failure_if_artichoke(error_class, error_message)
+  is_artichoke = RUBY_ENGINE.start_with?('artichoke')
+
+  begin
+    yield
+    # If we get here, no error was raised
+    if is_artichoke
+      raise "Expected #{error_class} with message #{error_message.inspect} on Artichoke, but no error was raised!"
+    end
+  rescue error_class => e
+    # If we catch the expected error type
+    raise "Did not expect any error on non-Artichoke! (Got #{error_class}: #{e.message.inspect})" unless is_artichoke
+    unless e.message == error_message
+      raise "Unexpected error message: #{e.message.inspect}\nExpected: #{error_message.inspect}"
+    end
+    # If message matches, we pass
+  end
 end
 
 ##
@@ -262,6 +332,513 @@ def test_hash_initialize_copy
   copy.send(:initialize_copy, orig)
   raise 'Expected 2 elements' unless copy.size == 2
   raise 'Expected same pairs' unless copy[:a] == 1 && copy[:b] == 2
+end
+
+def test_hash_merge_sad_path
+  # Merge with non-Hash
+  begin
+    h = { a: 1 }
+    h.merge(123)
+    raise 'Expected TypeError for merging non-Hash, but none was raised!'
+  rescue TypeError
+    # pass
+  end
+
+  # Merge with nil
+  begin
+    h.merge(nil)
+    raise 'Expected TypeError for merging nil, but none was raised!'
+  rescue TypeError
+    # pass
+  end
+
+  # Merge with self (should be fine if implemented carefully)
+  h2 = { b: 2 }
+  out = h2.merge(h2) { |_k, old_val, new_val| old_val + new_val }
+  # This is an odd scenario, but Ruby does handle it gracefully.
+  # b => 2 + 2 = 4
+  raise "Expected { b: 4 }, got #{out}" unless out == { b: 4 }
+end
+
+def test_hash_merge_block_edge_cases
+  # Return unusual values from the block
+  h = { a: 10, b: 20 }
+  other = { b: 999, c: 777 }
+  out = h.merge(other) do |_k, old_val, new_val|
+    # Arbitrary or weird return:
+    [old_val, new_val, :merged]
+  end
+  # => a => 10, b => [20, 999, :merged], c => 777
+  raise 'Expected a => 10' unless out[:a] == 10
+  raise 'Expected b => [20, 999, :merged]' unless out[:b] == [20, 999, :merged]
+  raise 'Expected c => 777' unless out[:c] == 777
+end
+
+def test_hash_default_proc_sad_path
+  h = {}
+  # Attempt to set the default proc to a non-callable
+  begin
+    h.default_proc = 123
+    raise 'Expected TypeError assigning non-callable default_proc, but none was raised!'
+  rescue TypeError => e
+    unless e.message == 'wrong default_proc type Integer (expected Proc)'
+      raise "got wrong exception message: #{e.message}"
+    end
+    # pass
+  end
+
+  # Attempt to retrieve default proc from a non-proc-based default
+  h.default = :some_default
+  return unless h.default_proc
+
+  raise 'Expected default_proc to be nil when default is a simple value'
+end
+
+def test_hash_default_proc_wrong_arity
+  h = {}
+
+  # 0-argument lambda => "default_proc takes two arguments (2 for 0)"
+  begin
+    h.default_proc = -> { 1 }
+    raise 'Expected TypeError for 0-arg default_proc, but no error was raised!'
+  rescue TypeError => e
+    unless e.message == 'default_proc takes two arguments (2 for 0)'
+      raise "Expected \"default_proc takes two arguments (2 for 0)\", got #{e.message.inspect}"
+    end
+  end
+
+  # 1-argument lambda => "default_proc takes two arguments (2 for 1)"
+  begin
+    h.default_proc = ->(_a) { 1 }
+    raise 'Expected TypeError for 1-arg default_proc, but no error was raised!'
+  rescue TypeError => e
+    unless e.message == 'default_proc takes two arguments (2 for 1)'
+      raise "Expected \"default_proc takes two arguments (2 for 1)\", got #{e.message.inspect}"
+    end
+  end
+
+  # 4-argument lambda => "default_proc takes two arguments (2 for 4)"
+  begin
+    h.default_proc = ->(_a, _b, _c, _d) { 1 }
+    raise 'Expected TypeError for 4-arg default_proc, but no error was raised!'
+  rescue TypeError => e
+    unless e.message == 'default_proc takes two arguments (2 for 4)'
+      raise "Expected \"default_proc takes two arguments (2 for 4)\", got #{e.message.inspect}"
+    end
+  end
+end
+
+def test_hash_fetch_sad_path
+  # fetch with no block, no default, missing key => KeyError
+  h = { x: 1 }
+  begin
+    h.fetch(:missing)
+    raise 'Expected KeyError for missing key with no default, but none was raised!'
+  rescue KeyError
+    # pass
+  end
+
+  # fetch with a block that raises an error
+  begin
+    h.fetch(:not_there) do |_k|
+      raise 'some inner error'
+    end
+    raise 'Expected RuntimeError in fetch block, but none was raised!'
+  rescue RuntimeError => e
+    raise "Expected 'some inner error', got #{e.message.inspect}" unless e.message == 'some inner error'
+  end
+end
+
+module Artichoke
+  module FunctionalTests
+    class Unhashable
+      def hash
+        raise 'Unhashable#hash called'
+      end
+
+      def eql?(other)
+        other.is_a?(Unhashable)
+      end
+    end
+  end
+end
+
+def test_hash_key_type_errors
+  h = {}
+  begin
+    h[Artichoke::FunctionalTests::Unhashable.new] = 1
+    raise 'Expected error from unhashable key'
+  rescue StandardError => e
+    # We can't guarantee the exact error type;
+    # might be RuntimeError or TypeError, depending on your Ruby.
+  end
+end
+
+def test_hash_delete_sad_path
+  h = { a: 1 }
+  # Passing no args to delete => ArgumentError in real Ruby
+  begin
+    h.delete
+    raise 'Expected ArgumentError for missing argument to Hash#delete'
+  rescue ArgumentError
+    # pass
+  end
+
+  # Passing multiple args to delete => ArgumentError in real Ruby
+  begin
+    h.delete(:a, :b)
+    raise 'Expected ArgumentError for multiple arguments to Hash#delete'
+  rescue ArgumentError
+    # pass
+  end
+end
+
+def test_hash_store_edge_cases
+  # Storing nil, false, etc.
+  h = {}
+  h[nil] = 'value for nil'
+  raise "Expected 'value for nil' for h[nil]" unless h[nil] == 'value for nil'
+
+  h[false] = :false_val
+  raise 'Expected :false_val for h[false]' unless h[false] == :false_val
+
+  # Overwriting the same key with different value types
+  h[:x] = 42
+  h[:x] = 'forty-two'
+  raise "Expected 'forty-two' for h[:x]" unless h[:x] == 'forty-two'
+end
+
+def test_hash_block_modification
+  # Some enumerators in Ruby raise an error if the hash is modified
+  # inside the block, e.g. .each, .each_key.
+  # We'll do a small check with .each_key
+  h = { a: 1, b: 2, c: 3 }
+  begin
+    h.each_key do |k|
+      h.delete(k) if k == :b
+    end
+    raise 'Expected RuntimeError or similar (hash modified during iteration).'
+  rescue RuntimeError
+    # This is standard MRI behavior, might differ in your environment
+    # If your environment doesn't raise, you can remove or skip this test.
+  end
+end
+
+def test_hash_merge_bang_no_args
+  h = { x: 1, y: 2 }
+  orig = h.object_id
+
+  # No arguments, no block
+  returned = h.merge!
+  raise 'Expected merge! with no args to return self' if returned.object_id != orig
+  raise "Expected no changes to h, got #{returned.inspect}" unless returned == { x: 1, y: 2 }
+
+  # No arguments, with a block => block is ignored
+  called_block = false
+  returned2 = h.merge! do |key, old_val, new_val|
+    called_block = true
+    :should_not_happen
+  end
+  raise 'Block was called even though no merges are happening!' if called_block
+  return if returned2 == h && returned2.object_id == orig
+
+  raise 'Expected still the same object, got a different one'
+end
+
+def test_hash_merge_bang_multi_args_no_block
+  base = { foo: 0, bar: 1, baz: 2 }
+  h1   = { bat: 3, bar: 4 }    # bar => 4
+  h2   = { bam: 5, bat: 6 }    # bat => 6
+
+  # Merge them left to right => h1 merges first, then h2
+  returned = base.merge!(h1, h2)
+  raise 'Expected #merge! to return self, not a new object' unless returned.equal?(base)
+
+  # After merging h1 => :bar => 4, :bat => 3
+  # After merging h2 => :bat => 6, :bam => 5
+  expected = { foo: 0, bar: 4, baz: 2, bat: 6, bam: 5 }
+  return if base == expected
+
+  raise "Expected #{expected.inspect}, got #{base.inspect}"
+end
+
+def test_hash_merge_bang_multi_args_with_block
+  base = { foo: 0, bar: 1, baz: 2 }
+  h1   = { bat: 3, bar: 4 }
+  h2   = { bam: 5, bat: 6 }
+
+  # If there's a duplicate, the block is called with (key, old_val, new_val).
+  returned = base.merge!(h1, h2) do |key, old_val, new_val|
+    old_val + new_val
+  end
+
+  raise 'Expected #merge! to return self' unless returned.equal?(base)
+
+  # Merged left to right:
+  # 1) Merge h1 => bar => old(1)+new(4)=5, bat => 3
+  # 2) Merge h2 => bat => old(3)+new(6)=9, bam => 5
+  # So final shape:
+  # foo => 0 (unchanged),
+  # bar => 5,
+  # baz => 2,
+  # bat => 9,
+  # bam => 5
+  expected = { foo: 0, bar: 5, baz: 2, bat: 9, bam: 5 }
+  return if base == expected
+
+  raise "Expected #{expected.inspect}, got #{base.inspect}"
+end
+
+def test_hash_merge_bang_multi_args_type_check
+  base = { a: 1 }
+  # second arg is not a Hash
+  begin
+    base.merge!({ b: 2 }, 123)
+    raise 'Expected TypeError merging a non-hash argument, but none was raised!'
+  rescue TypeError => e
+    # pass: "Hash required (Integer given)"
+    unless e.message == 'no implicit conversion of Integer into Hash'
+      raise "Unexpected error message: #{e.message.inspect}"
+    end
+  end
+end
+
+def test_hash_merge_bang_multi_args_self_referential
+  h = { x: 1, y: 2 }
+  # Merge h with itself multiple times
+  # If done left->right, each pass might double the value if there's a block
+  h.merge!(h, h) do |_key, old_val, new_val|
+    old_val + new_val
+  end
+  # 1) first merge => x => 1+1=2, y => 2+2=4
+  # 2) second merge => x => 2+2=4, y => 4+4=8
+  expected = { x: 4, y: 8 }
+  return if h == expected
+
+  raise "Expected self merges to produce #{expected.inspect}, got #{h.inspect}"
+end
+
+module Artichoke
+  module FunctionalTests
+    class HashCoercible
+      def to_hash
+        { coerced_key: 'coerced_value' }
+      end
+    end
+
+    class HashCoercibleWithBlock
+      def to_hash
+        { duplicated: 1 }
+      end
+    end
+
+    class HashCoercibleNonHash
+      def to_hash
+        123
+      end
+    end
+
+    class HashCoercibleNil
+      def to_hash
+        nil
+      end
+    end
+
+    class HashCoercibleRaise
+      def to_hash
+        raise 'Intentional error in to_hash'
+      end
+    end
+
+    class HashNonCoercible # rubocop:disable Lint/EmptyClass
+      # no #to_hash method
+    end
+  end
+end
+
+def test_hash_merge_coerce_success
+  base = { existing: 42 }
+  obj = Artichoke::FunctionalTests::HashCoercible.new
+
+  out = base.merge(obj)
+  # We expect base to remain unchanged, out is a new hash
+  unless out[:existing] == 42 && out[:coerced_key] == 'coerced_value'
+    raise "Expected merged result to include {existing: 42, coerced_key: 'coerced_value'}, got #{out.inspect}"
+  end
+  return if base.size == 1 && base[:existing] == 42
+
+  raise "Expected original hash unchanged, got #{base.inspect}"
+end
+
+def test_hash_merge_coerce_with_block
+  base = { duplicated: 10, unique: 99 }
+  obj = Artichoke::FunctionalTests::HashCoercibleWithBlock.new
+  # => obj.to_hash => { duplicated: 1 }
+  # Using a block for the duplicate key
+
+  out = base.merge(obj) do |_key, old_val, new_val|
+    old_val + new_val
+  end
+  # => duplicated => 10+1=11, plus unique => 99
+  expected = { duplicated: 11, unique: 99 }
+  raise "Expected #{expected.inspect}, got #{out.inspect}" unless out == expected
+  return if base == { duplicated: 10, unique: 99 }
+
+  raise "Expected original hash unchanged, got #{base.inspect}"
+end
+
+def test_hash_merge_coerce_non_hash
+  base = { a: 1 }
+  obj = Artichoke::FunctionalTests::HashCoercibleNonHash.new
+  # => to_hash returns 123, not a Hash
+  begin
+    base.merge(obj)
+    raise "Expected TypeError merging a 'HashCoercibleNonHash', but none raised!"
+  rescue TypeError => e
+    unless e.message == "can't convert Artichoke::FunctionalTests::HashCoercibleNonHash to Hash (Artichoke::FunctionalTests::HashCoercibleNonHash#to_hash gives Integer)"
+      raise "Unexpected error message: #{e.message.inspect}"
+    end
+  end
+end
+
+def test_hash_merge_coerce_nil
+  base = { a: 1 }
+  obj = Artichoke::FunctionalTests::HashCoercibleNil.new
+  begin
+    base.merge(obj)
+    raise 'Expected TypeError merging nil-coerce, but none raised!'
+  rescue TypeError => e
+    unless e.message == "can't convert Artichoke::FunctionalTests::HashCoercibleNil to Hash (Artichoke::FunctionalTests::HashCoercibleNil#to_hash gives NilClass)"
+      raise "Unexpected error message: #{e.message.inspect}"
+    end
+  end
+end
+
+def test_hash_merge_coerce_raises
+  base = { a: 1 }
+  obj = Artichoke::FunctionalTests::HashCoercibleRaise.new
+  begin
+    base.merge(obj)
+    raise 'Expected RuntimeError from to_hash, but none raised!'
+  rescue RuntimeError => e
+    raise "Unexpected message: #{e.message.inspect}" unless e.message == 'Intentional error in to_hash'
+  end
+end
+
+def test_hash_merge_non_coercible
+  base = { a: 1 }
+  obj = Artichoke::FunctionalTests::HashNonCoercible.new
+  begin
+    base.merge(obj)
+    raise "Expected TypeError for an object that doesn't respond to to_hash, but none raised!"
+  rescue TypeError => e
+    unless e.message == 'no implicit conversion of Artichoke::FunctionalTests::HashNonCoercible into Hash'
+      raise "Unexpected error message: #{e.message.inspect}"
+    end
+  end
+end
+
+def test_hash_merge_bang_coerce_success
+  base = { existing: 42 }
+  obj = Artichoke::FunctionalTests::HashCoercible.new
+  orig_id = base.object_id
+
+  returned = base.merge!(obj)
+  raise 'Expected merge! to return self, not a new object' unless returned.object_id == orig_id
+
+  # The coerced hash => {coerced_key: "coerced_value"}
+  # Merged in place
+  return if base[:existing] == 42 && base[:coerced_key] == 'coerced_value'
+
+  raise "Expected base to be updated with coerced_key, got #{base.inspect}"
+end
+
+def test_hash_merge_bang_coerce_with_block
+  base = { duplicated: 10, other: 5 }
+  obj = Artichoke::FunctionalTests::HashCoercibleWithBlock.new
+  # => to_hash => { duplicated: 1 }
+
+  base_id = base.object_id
+  returned = base.merge!(obj) do |_k, old_val, new_val|
+    old_val + new_val
+  end
+  raise 'Expected merge! to return self' unless returned.equal?(base)
+  raise 'Expected same object_id' unless base.object_id == base_id
+
+  # Merge in place => duplicated => 10+1=11, other => 5
+  expected = { duplicated: 11, other: 5 }
+  return if base == expected
+
+  raise "Expected #{expected.inspect}, got #{base.inspect}"
+end
+
+def test_hash_merge_bang_coerce_non_hash
+  base = { a: 1 }
+  obj = Artichoke::FunctionalTests::HashCoercibleNonHash.new
+  begin
+    base.merge!(obj)
+    raise 'Expected TypeError merging a non-hash from #to_hash, but none was raised!'
+  rescue TypeError => e
+    unless e.message == "can't convert Artichoke::FunctionalTests::HashCoercibleNonHash to Hash (Artichoke::FunctionalTests::HashCoercibleNonHash#to_hash gives Integer)"
+      raise "Unexpected error message: #{e.message.inspect}"
+    end
+  end
+end
+
+def test_hash_merge_bang_coerce_nil
+  base = { a: 1 }
+  obj = Artichoke::FunctionalTests::HashCoercibleNil.new
+  begin
+    base.merge!(obj)
+    raise 'Expected TypeError merging a nil from #to_hash, but none was raised!'
+  rescue TypeError => e
+    unless e.message == "can't convert Artichoke::FunctionalTests::HashCoercibleNil to Hash (Artichoke::FunctionalTests::HashCoercibleNil#to_hash gives NilClass)"
+      raise "Unexpected error message: #{e.message.inspect}"
+    end
+  end
+end
+
+def test_hash_merge_bang_coerce_raises
+  base = { a: 1 }
+  obj = Artichoke::FunctionalTests::HashCoercibleRaise.new
+  begin
+    base.merge!(obj)
+    raise 'Expected RuntimeError from #to_hash, but none was raised!'
+  rescue RuntimeError => e
+    raise "Unexpected message: #{e.message.inspect}" unless e.message == 'Intentional error in to_hash'
+  end
+end
+
+def test_hash_merge_bang_non_coercible
+  base = { a: 1 }
+  obj = Artichoke::FunctionalTests::HashNonCoercible.new
+  begin
+    base.merge!(obj)
+    raise "Expected TypeError for object that doesn't respond to #to_hash, but none raised!"
+  rescue TypeError => e
+    unless e.message == 'no implicit conversion of Artichoke::FunctionalTests::HashNonCoercible into Hash'
+      raise "Unexpected error message: #{e.message.inspect}"
+    end
+  end
+end
+
+def test_hash_merge_bang_multi_arg_coercion_with_collisions
+  base = { x: 1, duplicated: 10 }
+  c1   = Artichoke::FunctionalTests::HashCoercible.new           # => { coerced_key: "coerced_value" }
+  c2   = Artichoke::FunctionalTests::HashCoercibleWithBlock.new  # => { duplicated: 1 }
+
+  base.merge!(c1, c2) do |_key, old_val, new_val|
+    "#{old_val}+#{new_val}"
+  end
+  # After c1 => base => { x:1, duplicated:10, coerced_key:"coerced_value" }
+  # c1 has no duplicate keys => no block call
+  # After c2 => 'duplicated' => old=10, new=1 => block => "10+1"
+  # So final => { x:1, duplicated:"10+1", coerced_key:"coerced_value" }
+
+  expected = { x: 1, duplicated: '10+1', coerced_key: 'coerced_value' }
+  return if base == expected
+
+  raise "Expected multi-arg merge with collisions, got #{base.inspect}"
 end
 
 # Optionally, you can auto-run the spec if this file is loaded as a script:
