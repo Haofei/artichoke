@@ -43,6 +43,24 @@ module Artichoke
       "{#{out.join(', ')}}"
     end
     # rubocop:enable Lint/HashCompareByIdentity
+
+    def self.implicit_conversion(target)
+      return target if target.is_a?(::Hash)
+      raise TypeError, 'no implicit conversion of nil into Hash' if target.nil?
+
+      converted = target.to_hash
+      return converted if converted.is_a?(::Hash)
+
+      inspect_name = target.class.name
+      inspect_name = target.inspect if target.is_a?(TrueClass) || target.is_a?(FalseClass) || target.nil?
+      message = "can't convert #{inspect_name} to Hash (#{inspect_name}#to_hash gives #{converted.class})"
+      raise TypeError, message
+    rescue NoMethodError
+      inspect_name = target.class.name
+      inspect_name = target.inspect if target.is_a?(TrueClass) || target.is_a?(FalseClass) || target.nil?
+      message = "no implicit conversion of #{inspect_name} into Hash"
+      raise TypeError, message
+    end
   end
 end
 
@@ -265,7 +283,7 @@ class Hash
   end
 
   def merge(other, &block)
-    raise TypeError, "Hash required (#{other.class} given)" unless other.is_a?(Hash)
+    other = ::Artichoke::Hash.implicit_conversion(other)
 
     h = dup
     if block
