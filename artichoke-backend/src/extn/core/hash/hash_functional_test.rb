@@ -548,7 +548,7 @@ def test_hash_merge_bang_no_args
 
   # No arguments, with a block => block is ignored
   called_block = false
-  returned2 = h.merge! do |key, old_val, new_val|
+  returned2 = h.merge! do |_key, _old_val, _new_val|
     called_block = true
     :should_not_happen
   end
@@ -581,7 +581,7 @@ def test_hash_merge_bang_multi_args_with_block
   h2   = { bam: 5, bat: 6 }
 
   # If there's a duplicate, the block is called with (key, old_val, new_val).
-  returned = base.merge!(h1, h2) do |key, old_val, new_val|
+  returned = base.merge!(h1, h2) do |_key, old_val, new_val|
     old_val + new_val
   end
 
@@ -935,7 +935,7 @@ def test_hash_replace_with_default_proc
   h.default = :old_def
 
   other = { b: 2 }
-  other.default_proc = proc { |hash, key| "computed-#{key}" }
+  other.default_proc = proc { |_hash, key| "computed-#{key}" }
 
   h.replace(other)
   raise 'Expected h to have only key :b after replace' unless h.keys == [:b]
@@ -950,7 +950,7 @@ end
 
 def test_hash_replace_with_default_value
   h = {}
-  h.default_proc = proc { |_h, k| raise 'Should not happen' }
+  h.default_proc = proc { |_h, _k| raise 'Should not happen' }
 
   other = {}
   other.default = :simple_def
