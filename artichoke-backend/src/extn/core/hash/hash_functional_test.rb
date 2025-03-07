@@ -34,7 +34,10 @@ def spec
   end
 
   test_hash_fetch_sad_path
-  test_hash_key_type_errors
+  expect_failure_if_artichoke(RuntimeError, 'Unexpected error message: "Expected error from unhashable key"') do
+    # Pending patching of the bug in https://github.com/mruby/mruby/issues/6486
+    test_hash_key_type_errors
+  end
   test_hash_delete_sad_path
   test_hash_store_edge_cases
   test_hash_block_modification
@@ -481,9 +484,8 @@ def test_hash_key_type_errors
   begin
     h[Artichoke::FunctionalTests::Unhashable.new] = 1
     raise 'Expected error from unhashable key'
-  rescue StandardError => e
-    # We can't guarantee the exact error type;
-    # might be RuntimeError or TypeError, depending on your Ruby.
+  rescue RuntimeError => e
+    raise "Unexpected error message: #{e.message.inspect}" unless e.message == 'Unhashable#hash called'
   end
 end
 
