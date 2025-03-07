@@ -304,24 +304,35 @@ class Hash
     h
   end
 
-  def merge!(*others, &block)
-    i = 0
-    len = others.size
-    return __merge(*others) unless block
+  def merge!(*others)
+    # If no arguments at all, just return self
+    return self if others.empty?
 
-    while i < len
-      other = others[i]
-      i += 1
-      raise TypeError, "Hash required (#{other.class} given)" unless other.is_a?(Hash)
+    # If a block is given, yield on duplicates
+    if block_given?
+      others.each do |other|
+        other = ::Artichoke::Hash.implicit_conversion(other)
 
-      if block
-        other.each_key do |k|
-          self[k] = key?(k) ? block.call(k, self[k], other[k]) : other[k]
+        other.each do |k, new_val|
+          self[k] =
+            if key?(k)
+              yield(k, self[k], new_val)
+            else
+              new_val
+            end
         end
-      else
-        other.each_key { |k| self[k] = other[k] }
+      end
+    else
+      # No block
+      others.each do |other|
+        other = ::Artichoke::Hash.implicit_conversion(other)
+
+        other.each do |k, new_val|
+          self[k] = new_val
+        end
       end
     end
+
     self
   end
 
