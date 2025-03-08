@@ -48,14 +48,7 @@ pub fn add(interp: &mut Artichoke, mut value: Value, mut other: Value) -> Result
 }
 
 pub fn append(interp: &mut Artichoke, mut value: Value, mut other: Value) -> Result<Value, Error> {
-    if value.is_frozen(interp) {
-        let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
-        let message = "can't modify frozen String: "
-            .chars()
-            .chain(s.inspect())
-            .collect::<super::String>();
-        return Err(FrozenError::from(message.into_vec()).into());
-    }
+    check_frozen(interp, value)?;
 
     let mut s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     if let Ok(int) = other.try_convert_into::<i64>(interp) {
@@ -559,14 +552,7 @@ pub fn aref(
 }
 
 pub fn aset(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
-    if value.is_frozen(interp) {
-        let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
-        let message = "can't modify frozen String: "
-            .chars()
-            .chain(s.inspect())
-            .collect::<super::String>();
-        return Err(FrozenError::from(message.into_vec()).into());
-    }
+    check_frozen(interp, value)?;
 
     let _s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     Err(NotImplementedError::new().into())
@@ -901,26 +887,24 @@ pub fn capitalize(interp: &mut Artichoke, mut value: Value) -> Result<Value, Err
 }
 
 pub fn capitalize_bang(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
-    if value.is_frozen(interp) {
-        let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
-        let message = "can't modify frozen String: "
-            .chars()
-            .chain(s.inspect())
-            .collect::<super::String>();
-        return Err(FrozenError::from(message.into_vec()).into());
-    }
+    check_frozen(interp, value)?;
 
     let mut s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     // SAFETY: The string is repacked before any intervening uses of `interp`
     // which means no mruby heap allocations can occur.
-    unsafe {
+    let (effect, returned) = unsafe {
         let string_mut = s.as_inner_mut();
         // `make_capitalized` might reallocate the string and invalidate the
         // boxed pointer, capacity, length triple.
-        string_mut.make_capitalized();
+        let effect = string_mut.make_capitalized();
 
         let s = s.take();
-        super::String::box_into_value(s, value, interp)
+        (effect, super::String::box_into_value(s, value, interp)?)
+    };
+    if effect.changed() {
+        Ok(returned)
+    } else {
+        Ok(Value::nil())
     }
 }
 
@@ -1005,14 +989,7 @@ pub fn chomp(interp: &mut Artichoke, mut value: Value, separator: Option<Value>)
 }
 
 pub fn chomp_bang(interp: &mut Artichoke, mut value: Value, separator: Option<Value>) -> Result<Value, Error> {
-    if value.is_frozen(interp) {
-        let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
-        let message = "can't modify frozen String: "
-            .chars()
-            .chain(s.inspect())
-            .collect::<super::String>();
-        return Err(FrozenError::from(message.into_vec()).into());
-    }
+    check_frozen(interp, value)?;
 
     let mut s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     unsafe {
@@ -1042,14 +1019,7 @@ pub fn chop(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
 }
 
 pub fn chop_bang(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
-    if value.is_frozen(interp) {
-        let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
-        let message = "can't modify frozen String: "
-            .chars()
-            .chain(s.inspect())
-            .collect::<super::String>();
-        return Err(FrozenError::from(message.into_vec()).into());
-    }
+    check_frozen(interp, value)?;
 
     let mut s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     if s.is_empty() {
@@ -1073,14 +1043,7 @@ pub fn chr(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
 }
 
 pub fn clear(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
-    if value.is_frozen(interp) {
-        let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
-        let message = "can't modify frozen String: "
-            .chars()
-            .chain(s.inspect())
-            .collect::<super::String>();
-        return Err(FrozenError::from(message.into_vec()).into());
-    }
+    check_frozen(interp, value)?;
 
     let mut s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     // SAFETY: The string is repacked before any intervening uses of `interp`
@@ -1103,11 +1066,6 @@ pub fn codepoints(interp: &mut Artichoke, mut value: Value) -> Result<Value, Err
     Array::alloc_value(codepoints, interp)
 }
 
-pub fn concat(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
-    let _s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
-    Err(NotImplementedError::new().into())
-}
-
 pub fn downcase(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
     let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     let mut dup = s.clone();
@@ -1116,17 +1074,24 @@ pub fn downcase(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error
 }
 
 pub fn downcase_bang(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
+    check_frozen(interp, value)?;
+
     let mut s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     // SAFETY: The string is repacked before any intervening uses of `interp`
     // which means no mruby heap allocations can occur.
-    unsafe {
+    let (effect, returned) = unsafe {
         let string_mut = s.as_inner_mut();
-        // `make_lowercase` might reallocate the string and invalidate the
-        // boxed pointer, capacity, length triple.
-        string_mut.make_lowercase();
+        // `make_lowercase` might reallocate the string and invalidate the boxed
+        // pointer, capacity, length triple.
+        let effect = string_mut.make_lowercase();
 
         let s = s.take();
-        super::String::box_into_value(s, value, interp)
+        (effect, super::String::box_into_value(s, value, interp)?)
+    };
+    if effect.changed() {
+        Ok(returned)
+    } else {
+        Ok(Value::nil())
     }
 }
 
@@ -1214,8 +1179,8 @@ pub fn index(
 }
 
 pub fn initialize(interp: &mut Artichoke, mut value: Value, from: Option<Value>) -> Result<Value, Error> {
-    if value.is_frozen(interp) && from.is_some() {
-        return Err(FrozenError::from("can't modify frozen String").into());
+    if from.is_some() {
+        check_frozen(interp, value)?;
     }
 
     let Some(mut from) = from else {
@@ -1276,6 +1241,8 @@ pub fn initialize(interp: &mut Artichoke, mut value: Value, from: Option<Value>)
 }
 
 pub fn initialize_copy(interp: &mut Artichoke, mut value: Value, mut other: Value) -> Result<Value, Error> {
+    check_frozen(interp, value)?;
+
     // SAFETY: The extracted slice is immediately copied to an owned buffer. No
     // intervening operations on the mruby VM occur.
     let buf = unsafe {
@@ -1336,14 +1303,7 @@ pub fn reverse(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error>
 }
 
 pub fn reverse_bang(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
-    if value.is_frozen(interp) {
-        let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
-        let message = "can't modify frozen String: "
-            .chars()
-            .chain(s.inspect())
-            .collect::<super::String>();
-        return Err(FrozenError::from(message.into_vec()).into());
-    }
+    check_frozen(interp, value)?;
 
     let mut s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     // SAFETY: The string is repacked before any intervening uses of `interp`
@@ -1497,14 +1457,7 @@ pub fn setbyte(interp: &mut Artichoke, mut value: Value, index: Value, byte: Val
     let index = implicitly_convert_to_int(interp, index)?;
     let i64_byte = implicitly_convert_to_int(interp, byte)?;
 
-    if value.is_frozen(interp) {
-        let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
-        let message = "can't modify frozen String: "
-            .chars()
-            .chain(s.inspect())
-            .collect::<super::String>();
-        return Err(FrozenError::from(message.into_vec()).into());
-    }
+    check_frozen(interp, value)?;
 
     let mut s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     let index = if let Some(index) = aref::offset_to_index(index, s.len()) {
@@ -1614,6 +1567,35 @@ where
     }
 
     Ok(interp.convert(false))
+}
+
+pub fn swapcase(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
+    let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
+    let mut dup = s.clone();
+    dup.make_swapcase();
+    super::String::alloc_value(dup, interp)
+}
+
+pub fn swapcase_bang(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
+    check_frozen(interp, value)?;
+
+    let mut s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
+    // SAFETY: The string is repacked before any intervening uses of `interp`
+    // which means no mruby heap allocations can occur.
+    let (effect, returned) = unsafe {
+        let string_mut = s.as_inner_mut();
+        // `make_swapcase` might reallocate the string and invalidate the boxed
+        // pointer, capacity, length triple.
+        let effect = string_mut.make_swapcase();
+
+        let s = s.take();
+        (effect, super::String::box_into_value(s, value, interp)?)
+    };
+    if effect.changed() {
+        Ok(returned)
+    } else {
+        Ok(Value::nil())
+    }
 }
 
 pub fn to_f(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
@@ -1755,23 +1737,43 @@ pub fn upcase(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> 
 }
 
 pub fn upcase_bang(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
+    check_frozen(interp, value)?;
+
     let mut s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     // SAFETY: The string is repacked before any intervening uses of `interp`
     // which means no mruby heap allocations can occur.
-    unsafe {
+    let (effect, returned) = unsafe {
         let string_mut = s.as_inner_mut();
-        // `make_uppercase` might reallocate the string and invalidate the
-        // boxed pointer, capacity, length triple.
-        string_mut.make_uppercase();
+        // `make_uppercase` might reallocate the string and invalidate the boxed
+        // pointer, capacity, length triple.
+        let effect = string_mut.make_uppercase();
 
         let s = s.take();
-        super::String::box_into_value(s, value, interp)
+        (effect, super::String::box_into_value(s, value, interp)?)
+    };
+    if effect.changed() {
+        Ok(returned)
+    } else {
+        Ok(Value::nil())
     }
 }
 
 pub fn is_valid_encoding(interp: &mut Artichoke, mut value: Value) -> Result<Value, Error> {
     let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     Ok(interp.convert(s.is_valid_encoding()))
+}
+
+fn check_frozen(interp: &mut Artichoke, mut value: Value) -> Result<(), Error> {
+    if value.is_frozen(interp) {
+        let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
+        let message = "can't modify frozen String: "
+            .chars()
+            .chain(s.inspect())
+            .collect::<super::String>();
+        return Err(FrozenError::from(message.into_vec()).into());
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -1781,52 +1783,36 @@ mod tests {
 
     #[test]
     fn mutating_methods_may_raise_frozen_error() {
+        #[track_caller]
+        fn assert_is_frozen_err(result: Result<Value, Error>) {
+            let err = result.unwrap_err();
+            let message = err.message();
+            let class_name = err.name();
+            assert_eq!(class_name, "FrozenError");
+            assert_eq!(message.as_bstr(), br#"can't modify frozen String: "foo""#.as_bstr());
+        }
+
         let mut interp = interpreter();
         let mut slf = interp.eval(b"'foo'").unwrap();
 
         slf.freeze(&mut interp).unwrap();
 
         let other = interp.try_convert_mut("bar").unwrap();
-        assert_eq!(
-            append(&mut interp, slf, other).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen String: \\\"foo\\\")",
-        );
 
-        assert_eq!(
-            aset(&mut interp, slf).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen String: \\\"foo\\\")",
-        );
-
-        assert_eq!(
-            capitalize_bang(&mut interp, slf).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen String: \\\"foo\\\")",
-        );
-
-        assert_eq!(
-            chomp_bang(&mut interp, slf, None).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen String: \\\"foo\\\")",
-        );
-
-        assert_eq!(
-            chop_bang(&mut interp, slf).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen String: \\\"foo\\\")",
-        );
-
-        assert_eq!(
-            clear(&mut interp, slf).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen String: \\\"foo\\\")",
-        );
-
-        assert_eq!(
-            reverse_bang(&mut interp, slf).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen String: \\\"foo\\\")",
-        );
+        assert_is_frozen_err(append(&mut interp, slf, other));
+        assert_is_frozen_err(aset(&mut interp, slf));
+        assert_is_frozen_err(capitalize_bang(&mut interp, slf));
+        assert_is_frozen_err(chomp_bang(&mut interp, slf, None));
+        assert_is_frozen_err(chop_bang(&mut interp, slf));
+        assert_is_frozen_err(clear(&mut interp, slf));
+        assert_is_frozen_err(downcase_bang(&mut interp, slf));
+        assert_is_frozen_err(initialize_copy(&mut interp, slf, other));
+        assert_is_frozen_err(reverse_bang(&mut interp, slf));
+        assert_is_frozen_err(swapcase_bang(&mut interp, slf));
+        assert_is_frozen_err(upcase_bang(&mut interp, slf));
 
         let index = interp.convert(0);
         let byte = interp.convert(0);
-        assert_eq!(
-            setbyte(&mut interp, slf, index, byte).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen String: \\\"foo\\\")",
-        );
+        assert_is_frozen_err(setbyte(&mut interp, slf, index, byte));
     }
 }

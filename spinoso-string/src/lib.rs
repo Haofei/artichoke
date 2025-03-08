@@ -72,6 +72,7 @@ use scolapasta_strbuf::Buf;
 #[doc(inline)]
 pub use scolapasta_strbuf::RawParts;
 
+mod case_folding;
 mod center;
 mod chars;
 mod codepoints;
@@ -85,6 +86,7 @@ mod ord;
 #[cfg(test)]
 mod test;
 
+pub use case_folding::CaseFoldingEffect;
 pub use center::{Center, CenterError};
 pub use chars::Chars;
 pub use codepoints::{Codepoints, CodepointsError, InvalidCodepointError};
@@ -1407,21 +1409,139 @@ impl String {
 
     /// Modify this `String` to have the first character converted to uppercase
     /// and the remainder to lowercase.
+    ///
+    /// This function can be used to implement the Ruby method [`String#capitalize`].
+    ///
+    /// This function is encoding-aware. `String`s with [UTF-8 encoding] are
+    /// only [conventionally UTF-8]. Only valid UTF-8 byte sequences are
+    /// converted to capitalized. For ASCII and binary encoded strings, this
+    /// function converts each byte to capitalized.
+    ///
+    /// # Compatibility Note
+    ///
+    /// This function does not yet support Unicode case mapping modes, such as
+    /// specially handling the Turkish dotless "i" or the German eszett. This is
+    /// a known limitation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spinoso_string::{String, CaseFoldingEffect};
+    ///
+    /// let mut s = String::utf8(b"hello, world!".to_vec());
+    /// assert_eq!(s.make_capitalized(), CaseFoldingEffect::Modified);
+    /// assert_eq!(s, "Hello, world!");
+    /// ```
+    ///
+    /// [UTF-8 encoding]: crate::Encoding::Utf8
+    /// [ASCII encoding]: crate::Encoding::Ascii
+    /// [binary encoding]: crate::Encoding::Binary
+    /// [`String#capitalize`]: https://ruby-doc.org/core-3.1.2/String.html#method-i-capitalize
     #[inline]
-    pub fn make_capitalized(&mut self) {
-        self.inner.make_capitalized();
+    pub fn make_capitalized(&mut self) -> CaseFoldingEffect {
+        self.inner.make_capitalized()
     }
 
     /// Modify this `String` to have all characters converted to lowercase.
+    ///
+    /// This function can be used to implement the Ruby method [`String#downcase`].
+    ///
+    /// This function is encoding-aware. `String`s with [UTF-8 encoding] are
+    /// only [conventionally UTF-8]. Only valid UTF-8 byte sequences are
+    /// converted to lowercase. For ASCII and binary encoded strings, this
+    /// function converts each byte to lowercase.
+    ///
+    /// # Compatibility Note
+    ///
+    /// This function does not yet support Unicode case mapping modes, such as
+    /// specially handling the Turkish dotless "i" or the German eszett. This is
+    /// a known limitation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spinoso_string::{String, CaseFoldingEffect};
+    ///
+    /// let mut s = String::utf8(b"Hello, World!".to_vec());
+    /// assert_eq!(s.make_lowercase(), CaseFoldingEffect::Modified);
+    /// assert_eq!(s, "hello, world!");
+    /// ```
+    ///
+    /// [UTF-8 encoding]: crate::Encoding::Utf8
+    /// [ASCII encoding]: crate::Encoding::Ascii
+    /// [binary encoding]: crate::Encoding::Binary
+    /// [`String#downcase`]: https://ruby-doc.org/core-3.1.2/String.html#method-i-downcase
     #[inline]
-    pub fn make_lowercase(&mut self) {
-        self.inner.make_lowercase();
+    pub fn make_lowercase(&mut self) -> CaseFoldingEffect {
+        self.inner.make_lowercase()
     }
 
     /// Modify this `String` to have the all characters converted to uppercase.
+    ///
+    /// This function can be used to implement the Ruby method [`String#upcase`].
+    ///
+    /// This function is encoding-aware. `String`s with [UTF-8 encoding] are
+    /// only [conventionally UTF-8]. Only valid UTF-8 byte sequences are
+    /// converted to uppercase. For ASCII and binary encoded strings, this
+    /// function converts each byte to uppercase.
+    ///
+    /// # Compatibility Note
+    ///
+    /// This function does not yet support Unicode case mapping modes, such as
+    /// specially handling the Turkish dotless "i" or the German eszett. This is
+    /// a known limitation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spinoso_string::{String, CaseFoldingEffect};
+    ///
+    /// let mut s = String::utf8(b"Hello, World!".to_vec());
+    /// assert_eq!(s.make_uppercase(), CaseFoldingEffect::Modified);
+    /// assert_eq!(s, "HELLO, WORLD!");
+    /// ```
+    ///
+    /// [UTF-8 encoding]: crate::Encoding::Utf8
+    /// [ASCII encoding]: crate::Encoding::Ascii
+    /// [binary encoding]: crate::Encoding::Binary
+    /// [`String#upcase`]: https://ruby-doc.org/core-3.1.2/String.html#method-i-upcase
     #[inline]
-    pub fn make_uppercase(&mut self) {
-        self.inner.make_uppercase();
+    pub fn make_uppercase(&mut self) -> CaseFoldingEffect {
+        self.inner.make_uppercase()
+    }
+
+    /// Modify this `String` to have the case of each character inverted.
+    ///
+    /// This function can be used to implement the Ruby method [`String#swapcase`].
+    ///
+    /// This function is encoding-aware. `String`s with [UTF-8 encoding] are
+    /// only [conventionally UTF-8]. Only valid UTF-8 byte sequences are
+    /// converted to inverted case. For ASCII and binary encoded strings, this
+    /// function converts each byte to inverted case.
+    ///
+    /// # Compatibility Note
+    ///
+    /// This function does not yet support Unicode case mapping modes, such as
+    /// specially handling the Turkish dotless "i" or the German eszett. This is
+    /// a known limitation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use spinoso_string::{String, CaseFoldingEffect};
+    ///
+    /// let mut s = String::utf8(b"Hello, World!".to_vec());
+    /// assert_eq!(s.make_swapcase(), CaseFoldingEffect::Modified);
+    /// assert_eq!(s, "hELLO, wORLD!");
+    /// ```
+    ///
+    /// [UTF-8 encoding]: crate::Encoding::Utf8
+    /// [ASCII encoding]: crate::Encoding::Ascii
+    /// [binary encoding]: crate::Encoding::Binary
+    /// [`String#upcase`]: https://ruby-doc.org/core-3.1.2/String.html#method-i-upcase
+    #[inline]
+    pub fn make_swapcase(&mut self) -> CaseFoldingEffect {
+        self.inner.make_swapcase()
     }
 
     #[inline]

@@ -34,7 +34,7 @@ type Backend = spinoso_env::Memory;
 type Backend = spinoso_env::System;
 
 #[derive(Default, Debug)]
-#[allow(missing_copy_implementations)] // not all backends implement `Copy`
+#[allow(missing_copy_implementations, reason = "not all backends implement `Copy`")]
 pub struct Environ(Backend);
 
 impl Environ {

@@ -10,14 +10,15 @@ use binary::BinaryString;
 use scolapasta_strbuf::Buf;
 use utf8::Utf8String;
 
-use crate::CodepointsError;
 use crate::codepoints::InvalidCodepointError;
 use crate::encoding::Encoding;
 use crate::iter::{Bytes, IntoIter, Iter, IterMut};
 use crate::ord::OrdError;
+use crate::{CaseFoldingEffect, CodepointsError};
 
 mod ascii;
 mod binary;
+mod binascii;
 mod codepoints;
 mod impls;
 mod inspect;
@@ -544,7 +545,7 @@ impl EncodedString {
     }
 
     #[inline]
-    pub fn make_capitalized(&mut self) {
+    pub fn make_capitalized(&mut self) -> CaseFoldingEffect {
         match self {
             EncodedString::Ascii(inner) => inner.make_capitalized(),
             EncodedString::Binary(inner) => inner.make_capitalized(),
@@ -553,7 +554,7 @@ impl EncodedString {
     }
 
     #[inline]
-    pub fn make_uppercase(&mut self) {
+    pub fn make_uppercase(&mut self) -> CaseFoldingEffect {
         match self {
             EncodedString::Ascii(inner) => inner.make_uppercase(),
             EncodedString::Binary(inner) => inner.make_uppercase(),
@@ -562,11 +563,20 @@ impl EncodedString {
     }
 
     #[inline]
-    pub fn make_lowercase(&mut self) {
+    pub fn make_lowercase(&mut self) -> CaseFoldingEffect {
         match self {
             EncodedString::Ascii(inner) => inner.make_lowercase(),
             EncodedString::Binary(inner) => inner.make_lowercase(),
             EncodedString::Utf8(inner) => inner.make_lowercase(),
+        }
+    }
+
+    #[inline]
+    pub fn make_swapcase(&mut self) -> CaseFoldingEffect {
+        match self {
+            EncodedString::Ascii(inner) => inner.make_swapcase(),
+            EncodedString::Binary(inner) => inner.make_swapcase(),
+            EncodedString::Utf8(inner) => inner.make_swapcase(),
         }
     }
 

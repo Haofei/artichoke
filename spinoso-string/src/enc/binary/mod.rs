@@ -6,7 +6,9 @@ use core::slice::SliceIndex;
 use bstr::ByteSlice;
 use scolapasta_strbuf::Buf;
 
+use crate::case_folding::CaseFoldingEffect;
 use crate::codepoints::InvalidCodepointError;
+use crate::enc::binascii;
 use crate::iter::{Bytes, IntoIter, Iter, IterMut};
 use crate::ord::OrdError;
 
@@ -301,21 +303,23 @@ impl BinaryString {
 // Casing
 impl BinaryString {
     #[inline]
-    pub fn make_capitalized(&mut self) {
-        if let Some((head, tail)) = self.inner.split_first_mut() {
-            head.make_ascii_uppercase();
-            tail.make_ascii_lowercase();
-        }
+    pub fn make_capitalized(&mut self) -> CaseFoldingEffect {
+        binascii::make_capitalized(self.as_mut_slice())
     }
 
     #[inline]
-    pub fn make_lowercase(&mut self) {
-        self.inner.make_ascii_lowercase();
+    pub fn make_lowercase(&mut self) -> CaseFoldingEffect {
+        binascii::make_lowercase(self.as_mut_slice())
     }
 
     #[inline]
-    pub fn make_uppercase(&mut self) {
-        self.inner.make_ascii_uppercase();
+    pub fn make_uppercase(&mut self) -> CaseFoldingEffect {
+        binascii::make_uppercase(self.as_mut_slice())
+    }
+
+    #[inline]
+    pub fn make_swapcase(&mut self) -> CaseFoldingEffect {
+        binascii::make_swapcase(self.as_mut_slice())
     }
 }
 
