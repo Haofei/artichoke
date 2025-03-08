@@ -9,6 +9,7 @@ pub enum CaseFoldingEffect {
 
 impl CaseFoldingEffect {
     /// Returns `true` if at least one byte was changed.
+    #[must_use]
     pub const fn changed(&self) -> bool {
         matches!(self, Self::Modified)
     }

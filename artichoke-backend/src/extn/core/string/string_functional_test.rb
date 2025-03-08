@@ -247,14 +247,14 @@ end
 
 def test_string_byteindex
   s = 'foo'
-  raise "Expected index=0 for 'f' in 'foo'" unless s.byteindex('f') == 0
+  raise "Expected index=0 for 'f' in 'foo'" unless s.byteindex('f') == 0 # rubocop:disable Style/NumericPredicate
 
   raise "Expected index=1 for 'o'" unless s.byteindex('o') == 1
   raise "Expected index=1 for 'oo'" unless s.byteindex('oo') == 1
   raise "Expected nil for 'ooo' in 'foo'" unless s.byteindex('ooo').nil?
 
   raise 'Expected nil for /z/' unless s.byteindex(/z/).nil?
-  raise 'Expected index=0 for /f/' unless s.byteindex(/f/) == 0
+  raise 'Expected index=0 for /f/' unless s.byteindex(/f/) == 0 # rubocop:disable Style/NumericPredicate
   raise 'Expected index=1 for /o/' unless s.byteindex(/o/) == 1
   raise 'Expected index=1 for /oo/' unless s.byteindex(/oo/) == 1
   raise 'Expected nil for /ooo/' unless s.byteindex(/ooo/).nil?
@@ -522,9 +522,7 @@ def test_string_swapcase
   s = 'AbCd'
   swapped = s.swapcase
   raise "Expected 'aBcD', got #{swapped.inspect}" unless swapped == 'aBcD'
-  return if s == 'AbCd'
-
-  raise "Expected original unchanged, got #{s.inspect}"
+  raise "Expected original unchanged, got #{s.inspect}" unless s == 'AbCd'
 
   s = +'Hello World!' # => "Hello World!"
   result = s.swapcase
