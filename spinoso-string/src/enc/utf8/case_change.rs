@@ -106,6 +106,7 @@ pub fn to_utf8_lowercase(mut bytes: &[u8]) -> (Vec<u8>, CaseFoldingEffect) {
             replacement.push_char(ch);
         }
     }
+
     (replacement, effect)
 }
 
@@ -146,6 +147,7 @@ pub fn to_utf8_uppercase(mut bytes: &[u8]) -> (Vec<u8>, CaseFoldingEffect) {
             replacement.push_char(ch);
         }
     }
+
     (replacement, effect)
 }
 
@@ -200,6 +202,7 @@ pub fn to_utf8_swapcase(mut bytes: &[u8]) -> (Vec<u8>, CaseFoldingEffect) {
             old => replacement.push_char(old),
         }
     }
+
     (replacement, effect)
 }
 
@@ -254,7 +257,7 @@ mod tests {
             ("ßtest".as_bytes(), b"SStest", CaseFoldingEffect::Modified),
             // 4) Greek
             ("αγαπώ".as_bytes(), "Αγαπώ".as_bytes(), CaseFoldingEffect::Modified),
-            // 5) Turkic dotted i => "İ" => it's uppercase => first => 'İ' => 'İ'? unchanged => so the rest => "ABC"?
+            // 5) Non-turkic folding mode for dotted i
             ("işaret".as_bytes(), "Işaret".as_bytes(), CaseFoldingEffect::Modified),
             // 6) Chinese
             (
@@ -367,6 +370,7 @@ mod tests {
 
     #[test]
     // currently lacking support for swapping the case of titlecase characters.
+    // See: <https://github.com/artichoke/artichoke/issues/2834>
     #[should_panic = r#"Expected folding effect Modified for input "ǅ", got Unchanged with output "ǅ""#]
     fn test_to_utf8_swapcase_dz_digraph() {
         let cases: [(&[u8], &[u8], CaseFoldingEffect); 4] = [
