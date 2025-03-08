@@ -4,8 +4,10 @@ use alloc::vec::Vec;
 use scolapasta_strbuf::Buf;
 
 use super::Utf8Str;
+use crate::case_folding::CaseFoldingEffect;
 use crate::chars::ConventionallyUtf8;
 use crate::codepoints::InvalidCodepointError;
+use crate::enc::utf8::case_change;
 use crate::iter::IntoIter;
 
 mod eq;
@@ -167,116 +169,43 @@ impl Utf8String {
 }
 
 // Casing
+//
+// TODO: Use `roe` for case changing operations. UTF-8 case changing needs to be
+// parameterized on the case folding strategy to account for e.g. Turkic or
+// ASCII-only modes.
+//
+// https://github.com/artichoke/artichoke/issues/1723
 impl Utf8String {
-    // TODO: #1723 Use roe for case changing operations. UTF-8 case changing
-    //       needs to be parameterized on the case folding strategy to account
-    //       for e.g. Turkic or ASCII-only modes
     #[inline]
-    pub fn make_capitalized(&mut self) {
-        use bstr::ByteVec;
-
-        // This allocation assumes that in the common case, capitalizing
-        // and lower-casing `char`s do not change the length of the
-        // `String`.
-        //
-        // Use a `Vec` here instead of a `Buf` to ensure at most one alloc
-        // fix-up happens instead of alloc fix-ups being O(chars).
-        let mut replacement = Vec::with_capacity(self.len());
-        let mut bytes = self.inner.as_slice();
-
-        let (ch, size) = bstr::decode_utf8(bytes);
-        // SAFETY: bstr guarantees that the size is within the bounds of the slice.
-        let (chunk, remainder) = unsafe { bytes.split_at_unchecked(size) };
-        bytes = remainder;
-
-        if let Some(ch) = ch {
-            // Converting a UTF-8 character to uppercase may yield multiple codepoints.
-            for ch in ch.to_uppercase() {
-                replacement.push_char(ch);
-            }
-        } else {
-            replacement.extend_from_slice(chunk);
-        }
-
-        while !bytes.is_empty() {
-            let (ch, size) = bstr::decode_utf8(bytes);
-            // SAFETY: bstr guarantees that the size is within the bounds of the slice.
-            let (chunk, remainder) = unsafe { bytes.split_at_unchecked(size) };
-            bytes = remainder;
-
-            if let Some(ch) = ch {
-                // Converting a UTF-8 character to lowercase may yield
-                // multiple codepoints.
-                for ch in ch.to_lowercase() {
-                    replacement.push_char(ch);
-                }
-            } else {
-                replacement.extend_from_slice(chunk);
-            }
-        }
+    pub fn make_capitalized(&mut self) -> CaseFoldingEffect {
+        let (replacement, effect) = case_change::to_utf8_capitalized(self.as_bytes());
+        // Replace the old buffer with the new swapped buffer
         self.inner = replacement.into();
+        effect
     }
 
     #[inline]
-    pub fn make_lowercase(&mut self) {
-        use bstr::ByteVec;
-
-        // This allocation assumes that in the common case, lower-casing
-        // `char`s do not change the length of the `String`.
-        //
-        // Use a `Vec` here instead of a `Buf` to ensure at most one alloc
-        // fix-up happens instead of alloc fix-ups being O(chars).
-        let mut replacement = Vec::with_capacity(self.len());
-        let mut bytes = self.inner.as_slice();
-
-        while !bytes.is_empty() {
-            let (ch, size) = bstr::decode_utf8(bytes);
-            // SAFETY: bstr guarantees that the size is within the bounds of the slice.
-            let (chunk, remainder) = unsafe { bytes.split_at_unchecked(size) };
-            bytes = remainder;
-
-            if let Some(ch) = ch {
-                // Converting a UTF-8 character to lowercase may yield
-                // multiple codepoints.
-                for ch in ch.to_lowercase() {
-                    replacement.push_char(ch);
-                }
-            } else {
-                replacement.extend_from_slice(chunk);
-            }
-        }
+    pub fn make_lowercase(&mut self) -> CaseFoldingEffect {
+        let (replacement, effect) = case_change::to_utf8_lowercase(self.as_bytes());
+        // Replace the old buffer with the new swapped buffer
         self.inner = replacement.into();
+        effect
     }
 
     #[inline]
-    pub fn make_uppercase(&mut self) {
-        use bstr::ByteVec;
-
-        // This allocation assumes that in the common case, upper-casing
-        // `char`s do not change the length of the `String`.
-        //
-        // Use a `Vec` here instead of a `Buf` to ensure at most one alloc
-        // fix-up happens instead of alloc fix-ups being O(chars).
-        let mut replacement = Vec::with_capacity(self.len());
-        let mut bytes = self.inner.as_slice();
-
-        while !bytes.is_empty() {
-            let (ch, size) = bstr::decode_utf8(bytes);
-            // SAFETY: bstr guarantees that the size is within the bounds of the slice.
-            let (chunk, remainder) = unsafe { bytes.split_at_unchecked(size) };
-            bytes = remainder;
-
-            if let Some(ch) = ch {
-                // Converting a UTF-8 character to lowercase may yield
-                // multiple codepoints.
-                for ch in ch.to_uppercase() {
-                    replacement.push_char(ch);
-                }
-            } else {
-                replacement.extend_from_slice(chunk);
-            }
-        }
+    pub fn make_uppercase(&mut self) -> CaseFoldingEffect {
+        let (replacement, effect) = case_change::to_utf8_uppercase(self.as_bytes());
+        // Replace the old buffer with the new swapped buffer
         self.inner = replacement.into();
+        effect
+    }
+
+    #[inline]
+    pub fn make_swapcase(&mut self) -> CaseFoldingEffect {
+        let (replacement, effect) = case_change::to_utf8_swapcase(self.as_bytes());
+        // Replace the old buffer with the new swapped buffer
+        self.inner = replacement.into();
+        effect
     }
 }
 

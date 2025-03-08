@@ -40,7 +40,6 @@ pub fn init(interp: &mut Artichoke) -> InitializeResult<()> {
         .add_method("chr", string_chr, sys::mrb_args_none())?
         .add_method("clear", string_clear, sys::mrb_args_none())?
         .add_method("codepoints", string_codepoints, sys::mrb_args_none())? // This does not support the deprecated block form
-        .add_method("concat", string_concat, sys::mrb_args_any())?
         .add_method("downcase", string_downcase, sys::mrb_args_any())?
         .add_method("downcase!", string_downcase_bang, sys::mrb_args_any())?
         .add_method("empty?", string_empty, sys::mrb_args_none())?
@@ -67,6 +66,8 @@ pub fn init(interp: &mut Artichoke) -> InitializeResult<()> {
         .add_method("slice!", string_slice_bang, sys::mrb_args_req(1))?
         .add_method("split", string_split, sys::mrb_args_opt(2))?
         .add_method("start_with?", string_start_with, sys::mrb_args_rest())?
+        .add_method("swapcase", string_swapcase, sys::mrb_args_any())?
+        .add_method("swapcase!", string_swapcase_bang, sys::mrb_args_any())?
         .add_method("to_f", string_to_f, sys::mrb_args_none())?
         .add_method("to_i", string_to_i, sys::mrb_args_opt(1))?
         .add_method("to_s", string_to_s, sys::mrb_args_none())?
@@ -301,6 +302,9 @@ unsafe extern "C-unwind" fn string_byteslice(mrb: *mut sys::mrb_state, slf: sys:
 }
 
 unsafe extern "C-unwind" fn string_capitalize(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+    // FIXME: Support receiving case mapping options:
+    // <https://ruby-doc.org/core-3.1.2/doc/case_mapping_rdoc.html>
+    // <https://github.com/artichoke/artichoke/issues/2833>
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -315,6 +319,9 @@ unsafe extern "C-unwind" fn string_capitalize(mrb: *mut sys::mrb_state, slf: sys
 }
 
 unsafe extern "C-unwind" fn string_capitalize_bang(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+    // FIXME: Support receiving case mapping options:
+    // <https://ruby-doc.org/core-3.1.2/doc/case_mapping_rdoc.html>
+    // <https://github.com/artichoke/artichoke/issues/2833>
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -506,21 +513,10 @@ unsafe extern "C-unwind" fn string_codepoints(mrb: *mut sys::mrb_state, slf: sys
     }
 }
 
-unsafe extern "C-unwind" fn string_concat(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
-    mrb_get_args!(mrb, none);
-    unwrap_interpreter!(mrb, to => guard);
-    let value = Value::from(slf);
-    let result = trampoline::concat(&mut guard, value);
-    match result {
-        Ok(value) => value.inner(),
-        Err(exception) => {
-            // SAFETY: only Copy objects remain on the stack
-            unsafe { error::raise(guard, exception) }
-        }
-    }
-}
-
 unsafe extern "C-unwind" fn string_downcase(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+    // FIXME: Support receiving case mapping options:
+    // <https://ruby-doc.org/core-3.1.2/doc/case_mapping_rdoc.html>
+    // <https://github.com/artichoke/artichoke/issues/2833>
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -535,6 +531,9 @@ unsafe extern "C-unwind" fn string_downcase(mrb: *mut sys::mrb_state, slf: sys::
 }
 
 unsafe extern "C-unwind" fn string_downcase_bang(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+    // FIXME: Support receiving case mapping options:
+    // <https://ruby-doc.org/core-3.1.2/doc/case_mapping_rdoc.html>
+    // <https://github.com/artichoke/artichoke/issues/2833>
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -871,6 +870,40 @@ unsafe extern "C-unwind" fn string_start_with(mrb: *mut sys::mrb_state, slf: sys
     }
 }
 
+unsafe extern "C-unwind" fn string_swapcase(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+    // FIXME: Support receiving case mapping options:
+    // <https://ruby-doc.org/core-3.1.2/doc/case_mapping_rdoc.html>
+    // <https://github.com/artichoke/artichoke/issues/2833>
+    mrb_get_args!(mrb, none);
+    unwrap_interpreter!(mrb, to => guard);
+    let value = Value::from(slf);
+    let result = trampoline::swapcase(&mut guard, value);
+    match result {
+        Ok(value) => value.inner(),
+        Err(exception) => {
+            // SAFETY: only Copy objects remain on the stack
+            unsafe { error::raise(guard, exception) }
+        }
+    }
+}
+
+unsafe extern "C-unwind" fn string_swapcase_bang(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+    // FIXME: Support receiving case mapping options:
+    // <https://ruby-doc.org/core-3.1.2/doc/case_mapping_rdoc.html>
+    // <https://github.com/artichoke/artichoke/issues/2833>
+    mrb_get_args!(mrb, none);
+    unwrap_interpreter!(mrb, to => guard);
+    let value = Value::from(slf);
+    let result = trampoline::swapcase_bang(&mut guard, value);
+    match result {
+        Ok(value) => value.inner(),
+        Err(exception) => {
+            // SAFETY: only Copy objects remain on the stack
+            unsafe { error::raise(guard, exception) }
+        }
+    }
+}
+
 unsafe extern "C-unwind" fn string_to_f(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
@@ -916,6 +949,9 @@ unsafe extern "C-unwind" fn string_to_s(mrb: *mut sys::mrb_state, slf: sys::mrb_
 }
 
 unsafe extern "C-unwind" fn string_upcase(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+    // FIXME: Support receiving case mapping options:
+    // <https://ruby-doc.org/core-3.1.2/doc/case_mapping_rdoc.html>
+    // <https://github.com/artichoke/artichoke/issues/2833>
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);
@@ -930,6 +966,9 @@ unsafe extern "C-unwind" fn string_upcase(mrb: *mut sys::mrb_state, slf: sys::mr
 }
 
 unsafe extern "C-unwind" fn string_upcase_bang(mrb: *mut sys::mrb_state, slf: sys::mrb_value) -> sys::mrb_value {
+    // FIXME: Support receiving case mapping options:
+    // <https://ruby-doc.org/core-3.1.2/doc/case_mapping_rdoc.html>
+    // <https://github.com/artichoke/artichoke/issues/2833>
     mrb_get_args!(mrb, none);
     unwrap_interpreter!(mrb, to => guard);
     let value = Value::from(slf);

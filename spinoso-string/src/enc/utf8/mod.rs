@@ -39,6 +39,7 @@ macro_rules! impl_partial_eq_array {
 }
 
 mod borrowed;
+mod case_change;
 mod inspect;
 mod owned;
 
@@ -290,6 +291,9 @@ mod tests {
 
         s.make_uppercase();
         assert_eq!(s, "");
+
+        s.make_swapcase();
+        assert_eq!(s, "");
     }
 
     #[test]
@@ -314,6 +318,11 @@ mod tests {
             value.make_uppercase();
             value
         };
+        let swapcase: fn(&Utf8String) -> Utf8String = |value: &Utf8String| {
+            let mut value = value.clone();
+            value.make_swapcase();
+            value
+        };
 
         assert_eq!(capitalize(&lower), "Abc");
         assert_eq!(capitalize(&mid_upper), "Abc");
@@ -329,6 +338,11 @@ mod tests {
         assert_eq!(uppercase(&mid_upper), "ABC");
         assert_eq!(uppercase(&upper), "ABC");
         assert_eq!(uppercase(&long), "ABC, 123, ABC, BABY YOU AND ME GIRL");
+
+        assert_eq!(swapcase(&lower), "ABC");
+        assert_eq!(swapcase(&mid_upper), "AbC");
+        assert_eq!(swapcase(&upper), "abc");
+        assert_eq!(swapcase(&long), "Abc, 123, abc, BABY YOU AND ME GIRL");
     }
 
     #[test]
@@ -366,6 +380,11 @@ mod tests {
             value.make_uppercase();
             value
         };
+        let swapcase: fn(&Utf8String) -> Utf8String = |value: &Utf8String| {
+            let mut value = value.clone();
+            value.make_swapcase();
+            value
+        };
 
         assert_eq!(capitalize(&sharp_s), "SS");
         assert_eq!(capitalize(&tomorrow), "Αύριο");
@@ -396,6 +415,23 @@ mod tests {
         );
         assert_eq!(uppercase(&varying_length), "ZȺȾ");
         assert_eq!(uppercase(&rtl), "مرحبا الخرشوف");
+
+        let sharp_s = Utf8String::from("SS");
+        let tomorrow = Utf8String::from("Αύριο");
+        let year = Utf8String::from("Έτος");
+        // This next line is the titlecase version of the earlier two-byte string:
+        let two_byte_chars = Utf8String::from("𐐜 𐐔𐐯𐑅𐐨𐑉𐐯𐐻 𐐙𐐲𐑉𐑅𐐻/𐑅𐐯𐐿𐐲𐑌𐐼 𐐒𐐳𐐿 𐐒𐐴 𐐜 𐐡𐐨𐐾𐐯𐑌𐐻𐑅 𐐉𐑂 𐐜 𐐔𐐯𐑅𐐨𐑉𐐯𐐻 𐐏𐐮𐐭𐑌𐐮𐑂𐐲𐑉𐑅𐐮𐐻𐐮");
+        let varying_length = Utf8String::from("Zⱥⱦ");
+        let rtl = Utf8String::from("مرحبا الخرشوف");
+        assert_eq!(swapcase(&sharp_s), "ss", "swapcase(SS) failed");
+        assert_eq!(swapcase(&tomorrow), "αΎΡΙΟ", "swapcase(Αύριο) failed");
+        assert_eq!(swapcase(&year), "έΤΟΣ", "swapcase(Έτος) failed");
+        assert_eq!(
+            swapcase(&two_byte_chars),
+            "𐑄 𐐼𐐇𐐝𐐀𐐡𐐇𐐓 𐑁𐐊𐐡𐐝𐐓/𐐝𐐇𐐗𐐊𐐤𐐔 𐐺𐐋𐐗 𐐺𐐌 𐑄 𐑉𐐀𐐖𐐇𐐤𐐓𐐝 𐐱𐐚 𐑄 𐐼𐐇𐐝𐐀𐐡𐐇𐐓 𐐷𐐆𐐅𐐤𐐆𐐚𐐊𐐡𐐝𐐆𐐓𐐆"
+        );
+        assert_eq!(swapcase(&varying_length), "zȺȾ", "swapcase(Zⱥⱦ) mismatch");
+        assert_eq!(swapcase(&rtl), "مرحبا الخرشوف", "swapcase(مرحبا الخرشوف) mismatch");
     }
 
     #[test]
@@ -410,6 +446,9 @@ mod tests {
 
         s.make_uppercase();
         assert_eq!(s, &b"\xFF\xFE"[..]);
+
+        s.make_swapcase();
+        assert_eq!(s, &b"\xFF\xFE"[..]);
     }
 
     #[test]
@@ -423,6 +462,9 @@ mod tests {
         assert_eq!(s, "�");
 
         s.make_uppercase();
+        assert_eq!(s, "�");
+
+        s.make_swapcase();
         assert_eq!(s, "�");
     }
 

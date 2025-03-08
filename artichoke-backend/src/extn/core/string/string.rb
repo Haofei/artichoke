@@ -171,9 +171,8 @@ class String
     # variables" like MRI does.
     return other.match(self)&.begin(0) if other.is_a?(Regexp)
     raise TypeError, "type mismatch: #{other.class} given" if other.is_a?(String)
-    return other =~ self if other.respond_to?(:=~)
 
-    nil
+    other =~ self
   end
 
   # https://ruby-doc.org/core-3.0.2/String.html#method-i-5B-5D
@@ -297,10 +296,12 @@ class String
   # def codepoints; end
 
   # https://ruby-doc.org/core-3.0.2/String.html#method-i-concat
-  #
-  # NOTE: Implemented in native code.
-  #
-  # def concat(*objects); end
+  def concat(*objects)
+    objects.each do |obj|
+      self << obj
+    end
+    self
+  end
 
   # https://ruby-doc.org/core-3.0.2/String.html#method-i-count
   def count(other_str, *rest)
@@ -1012,16 +1013,16 @@ class String
   end
 
   # https://ruby-doc.org/core-3.0.2/String.html#method-i-swapcase
-  def swapcase(*_args)
-    raise NotImplementedError
-  end
+  #
+  # NOTE: Implemented in native code.
+  #
+  # def swapcase(*_args); end
 
   # https://ruby-doc.org/core-3.0.2/String.html#method-i-swapcase-21
-  def swapcase!(*_args)
-    raise FrozenError, "can't modify frozen String: #{inspect}" if frozen?
-
-    raise NotImplementedError
-  end
+  #
+  # NOTE: Implemented in native code.
+  #
+  # def swapcase!(*_args); end
 
   # https://ruby-doc.org/core-3.0.2/String.html#method-i-to_a
   def to_a

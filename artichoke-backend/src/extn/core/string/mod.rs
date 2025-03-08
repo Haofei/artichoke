@@ -166,7 +166,7 @@ mod tests {
 
     const SUBJECT: &str = "String";
     #[cfg(feature = "core-regexp")]
-    const FUNCTIONAL_TEST: &[u8] = include_bytes!("string_test.rb");
+    const FUNCTIONAL_TEST: &[u8] = include_bytes!("string_functional_test.rb");
 
     #[test]
     #[cfg(feature = "core-regexp")]

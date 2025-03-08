@@ -6,7 +6,9 @@ use core::slice::SliceIndex;
 use bstr::ByteSlice;
 use scolapasta_strbuf::Buf;
 
+use crate::case_folding::CaseFoldingEffect;
 use crate::codepoints::InvalidCodepointError;
+use crate::enc::binascii;
 use crate::encoding::Encoding;
 use crate::iter::{Bytes, IntoIter, Iter, IterMut};
 use crate::ord::OrdError;
@@ -310,21 +312,23 @@ impl AsciiString {
 // Casing
 impl AsciiString {
     #[inline]
-    pub fn make_capitalized(&mut self) {
-        if let Some((head, tail)) = self.inner.split_first_mut() {
-            head.make_ascii_uppercase();
-            tail.make_ascii_lowercase();
-        }
+    pub fn make_capitalized(&mut self) -> CaseFoldingEffect {
+        binascii::make_capitalized(self.as_mut_slice())
     }
 
     #[inline]
-    pub fn make_lowercase(&mut self) {
-        self.inner.make_ascii_lowercase();
+    pub fn make_lowercase(&mut self) -> CaseFoldingEffect {
+        binascii::make_lowercase(self.as_mut_slice())
     }
 
     #[inline]
-    pub fn make_uppercase(&mut self) {
-        self.inner.make_ascii_uppercase();
+    pub fn make_uppercase(&mut self) -> CaseFoldingEffect {
+        binascii::make_uppercase(self.as_mut_slice())
+    }
+
+    #[inline]
+    pub fn make_swapcase(&mut self) -> CaseFoldingEffect {
+        binascii::make_swapcase(self.as_mut_slice())
     }
 }
 
@@ -458,6 +462,11 @@ mod tests {
             value.make_uppercase();
             value
         };
+        let swapcase: fn(&AsciiString) -> AsciiString = |value: &AsciiString| {
+            let mut value = value.clone();
+            value.make_swapcase();
+            value
+        };
 
         assert_eq!(capitalize(&lower), "Abc");
         assert_eq!(capitalize(&mid_upper), "Abc");
@@ -473,6 +482,11 @@ mod tests {
         assert_eq!(uppercase(&mid_upper), "ABC");
         assert_eq!(uppercase(&upper), "ABC");
         assert_eq!(uppercase(&long), "ABC, 123, ABC, BABY YOU AND ME GIRL");
+
+        assert_eq!(swapcase(&lower), "ABC");
+        assert_eq!(swapcase(&mid_upper), "AbC");
+        assert_eq!(swapcase(&upper), "abc");
+        assert_eq!(swapcase(&long), "Abc, 123, abc, BABY YOU AND ME GIRL");
     }
 
     #[test]
@@ -501,6 +515,11 @@ mod tests {
         let uppercase: fn(&AsciiString) -> AsciiString = |value: &AsciiString| {
             let mut value = value.clone();
             value.make_uppercase();
+            value
+        };
+        let swapcase: fn(&AsciiString) -> AsciiString = |value: &AsciiString| {
+            let mut value = value.clone();
+            value.make_swapcase();
             value
         };
 
@@ -533,6 +552,16 @@ mod tests {
         );
         assert_eq!(uppercase(&varying_length), "ZȺȾ");
         assert_eq!(uppercase(&rtl), "مرحبا الخرشوف");
+
+        assert_eq!(swapcase(&sharp_s), "ß");
+        assert_eq!(swapcase(&tomorrow), "αύριο");
+        assert_eq!(swapcase(&year), "έτος");
+        assert_eq!(
+            swapcase(&two_byte_chars),
+            "𐐜 𐐔𐐇𐐝𐐀𐐡𐐇𐐓 𐐙𐐊𐐡𐐝𐐓/𐐝𐐇𐐗𐐊𐐤𐐔 𐐒𐐋𐐗 𐐒𐐌 𐐜 𐐡𐐀𐐖𐐇𐐤𐐓𐐝 𐐱𐑂 𐑄 𐐔𐐇𐐝𐐀𐐡𐐇𐐓 𐐏𐐆𐐅𐐤𐐆𐐚𐐊𐐡𐐝𐐆𐐓𐐆"
+        );
+        assert_eq!(swapcase(&varying_length), "ZȺȾ");
+        assert_eq!(swapcase(&rtl), "مرحبا الخرشوف");
     }
 
     #[test]
@@ -547,6 +576,9 @@ mod tests {
 
         s.make_uppercase();
         assert_eq!(s, &b"\xFF\xFE"[..]);
+
+        s.make_swapcase();
+        assert_eq!(s, &b"\xFF\xFE"[..]);
     }
 
     #[test]
@@ -560,6 +592,9 @@ mod tests {
         assert_eq!(s, "�");
 
         s.make_uppercase();
+        assert_eq!(s, "�");
+
+        s.make_swapcase();
         assert_eq!(s, "�");
     }
 
