@@ -1764,20 +1764,21 @@ pub fn is_valid_encoding(interp: &mut Artichoke, mut value: Value) -> Result<Val
 }
 
 fn check_frozen(interp: &mut Artichoke, mut value: Value) -> Result<(), Error> {
-    if value.is_frozen(interp) {
-        let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
-        let message = "can't modify frozen String: "
-            .chars()
-            .chain(s.inspect())
-            .collect::<super::String>();
-        return Err(FrozenError::from(message.into_vec()).into());
+    if !value.is_frozen(interp) {
+        return Ok(());
     }
-
-    Ok(())
+    let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
+    let message = "can't modify frozen String: "
+        .chars()
+        .chain(s.inspect())
+        .collect::<super::String>();
+    Err(FrozenError::from(message.into_vec()).into())
 }
 
 #[cfg(test)]
 mod tests {
+    use bstr::ByteSlice;
+
     use super::*;
     use crate::test::prelude::*;
 

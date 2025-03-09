@@ -11,12 +11,7 @@ pub fn plus(interp: &mut Artichoke, mut ary: Value, mut other: Value) -> Result<
         result
     } else if other.respond_to(interp, "to_ary")? {
         let mut other_converted = other.funcall(interp, "to_ary", &[], None)?;
-        if let Ok(other) = unsafe { Array::unbox_from_value(&mut other_converted, interp) } {
-            let mut result = Array::with_capacity(array.len() + other.len());
-            result.concat(array.as_slice());
-            result.concat(other.as_slice());
-            result
-        } else {
+        let Ok(other) = (unsafe { Array::unbox_from_value(&mut other_converted, interp) }) else {
             let mut message = String::from("can't convert ");
             let name = interp.inspect_type_name_for_value(other);
             message.push_str(name);
@@ -25,7 +20,11 @@ pub fn plus(interp: &mut Artichoke, mut ary: Value, mut other: Value) -> Result<
             message.push_str("#to_ary gives ");
             message.push_str(interp.inspect_type_name_for_value(other_converted));
             return Err(TypeError::from(message).into());
-        }
+        };
+        let mut result = Array::with_capacity(array.len() + other.len());
+        result.concat(array.as_slice());
+        result.concat(other.as_slice());
+        result
     } else {
         let mut message = String::from("no implicit conversion of ");
         message.push_str(interp.inspect_type_name_for_value(other));
@@ -46,27 +45,25 @@ pub fn mul(interp: &mut Artichoke, mut ary: Value, mut joiner: Value) -> Result<
         interp.try_convert_mut(s)
     } else {
         let n = implicitly_convert_to_int(interp, joiner)?;
-        if let Ok(n) = usize::try_from(n) {
-            let value = super::repeat(&array, n)?;
-            let result = Array::alloc_value(value, interp)?;
-            let result_value = result.inner();
-            let ary_value = ary.inner();
-            unsafe {
-                let ary_rbasic = ary_value.value.p.cast::<sys::RBasic>();
-                let result_rbasic = result_value.value.p.cast::<sys::RBasic>();
-                (*result_rbasic).c = (*ary_rbasic).c;
-            }
-            Ok(result)
-        } else {
-            Err(ArgumentError::with_message("negative argument").into())
+        let Ok(n) = usize::try_from(n) else {
+            return Err(ArgumentError::with_message("negative argument").into());
+        };
+        let value = super::repeat(&array, n)?;
+        let result = Array::alloc_value(value, interp)?;
+        let result_value = result.inner();
+        let ary_value = ary.inner();
+        unsafe {
+            let ary_rbasic = ary_value.value.p.cast::<sys::RBasic>();
+            let result_rbasic = result_value.value.p.cast::<sys::RBasic>();
+            (*result_rbasic).c = (*ary_rbasic).c;
         }
+        Ok(result)
     }
 }
 
 pub fn push_single(interp: &mut Artichoke, mut ary: Value, value: Value) -> Result<Value, Error> {
-    if ary.is_frozen(interp) {
-        return Err(FrozenError::with_message("can't modify frozen Array").into());
-    }
+    check_frozen(interp, ary)?;
+
     let mut array = unsafe { Array::unbox_from_value(&mut ary, interp)? };
 
     // SAFETY: The array is repacked without any intervening interpreter heap
@@ -100,9 +97,8 @@ pub fn element_assignment(
     second: Value,
     third: Option<Value>,
 ) -> Result<Value, Error> {
-    if ary.is_frozen(interp) {
-        return Err(FrozenError::with_message("can't modify frozen Array").into());
-    }
+    check_frozen(interp, ary)?;
+
     // TODO: properly handle self-referential sets.
     if ary == first || ary == second || Some(ary) == third {
         return Ok(Value::nil());
@@ -123,9 +119,8 @@ pub fn element_assignment(
 }
 
 pub fn clear(interp: &mut Artichoke, mut ary: Value) -> Result<Value, Error> {
-    if ary.is_frozen(interp) {
-        return Err(FrozenError::with_message("can't modify frozen Array").into());
-    }
+    check_frozen(interp, ary)?;
+
     let mut array = unsafe { Array::unbox_from_value(&mut ary, interp)? };
 
     // SAFETY: Clearing a `Vec` does not reallocate it, but it does change its
@@ -147,9 +142,7 @@ where
     I: IntoIterator<Item = Value>,
     I::IntoIter: Clone,
 {
-    if ary.is_frozen(interp) {
-        return Err(FrozenError::with_message("can't modify frozen Array").into());
-    }
+    check_frozen(interp, ary)?;
 
     let mut array = unsafe { Array::unbox_from_value(&mut ary, interp)? };
 
@@ -176,9 +169,8 @@ where
     // into `ary`.
     const OTHER_ARRAYS_AVG_LENGTH: usize = 5;
 
-    if ary.is_frozen(interp) {
-        return Err(FrozenError::with_message("can't modify frozen Array").into());
-    }
+    check_frozen(interp, ary)?;
+
     let array = unsafe { Array::unbox_from_value(&mut ary, interp)? };
     let others = others.into_iter();
 
@@ -196,10 +188,7 @@ where
             replacement.concat(other.as_slice());
         } else if other.respond_to(interp, "to_ary")? {
             let mut other_converted = other.funcall(interp, "to_ary", &[], None)?;
-            if let Ok(other) = unsafe { Array::unbox_from_value(&mut other_converted, interp) } {
-                replacement.reserve(other.len());
-                replacement.concat(other.as_slice());
-            } else {
+            let Ok(other) = (unsafe { Array::unbox_from_value(&mut other_converted, interp) }) else {
                 let mut message = String::from("can't convert ");
                 let name = interp.inspect_type_name_for_value(other);
                 message.push_str(name);
@@ -208,7 +197,10 @@ where
                 message.push_str("#to_ary gives ");
                 message.push_str(interp.inspect_type_name_for_value(other_converted));
                 return Err(TypeError::from(message).into());
-            }
+            };
+
+            replacement.reserve(other.len());
+            replacement.concat(other.as_slice());
         } else {
             let mut message = String::from("no implicit conversion of ");
             message.push_str(interp.inspect_type_name_for_value(other));
@@ -227,23 +219,21 @@ where
 
 pub fn first(interp: &mut Artichoke, mut ary: Value, num: Option<Value>) -> Result<Value, Error> {
     let array = unsafe { Array::unbox_from_value(&mut ary, interp)? };
-    if let Some(num) = num {
-        // Hack to detect `BigNum`
-        if let Ruby::Float = num.ruby_type() {
-            return Err(RangeError::with_message("bignum too big to convert into `long'").into());
-        }
-        let n = implicitly_convert_to_int(interp, num)?;
-        if let Ok(n) = usize::try_from(n) {
-            let slice = array.first_n(n);
-            let result = Array::from(slice);
-            Array::alloc_value(result, interp)
-        } else {
-            Err(ArgumentError::with_message("negative array size").into())
-        }
-    } else {
-        let last = array.first();
-        Ok(interp.convert(last))
+    let Some(num) = num else {
+        let first = array.first();
+        return Ok(interp.convert(first));
+    };
+    // Hack to detect `BigNum`
+    if let Ruby::Float = num.ruby_type() {
+        return Err(RangeError::with_message("bignum too big to convert into `long'").into());
     }
+    let n = implicitly_convert_to_int(interp, num)?;
+    let Ok(n) = usize::try_from(n) else {
+        return Err(ArgumentError::with_message("negative array size").into());
+    };
+    let slice = array.first_n(n);
+    let result = Array::from(slice);
+    Array::alloc_value(result, interp)
 }
 
 pub fn initialize(
@@ -253,9 +243,8 @@ pub fn initialize(
     second: Option<Value>,
     block: Option<Block>,
 ) -> Result<Value, Error> {
-    if value.is_frozen(interp) {
-        return Err(FrozenError::with_message("can't modify frozen Array").into());
-    }
+    check_frozen(interp, value)?;
+
     // If we are calling `initialize` on an already initialized `Array`,
     // pluck out the inner buffer and drop it so we don't leak memory.
     if let Ok(a) = unsafe { Array::unbox_from_value(&mut value, interp) } {
@@ -277,6 +266,8 @@ pub fn initialize(
 }
 
 pub fn initialize_copy(interp: &mut Artichoke, ary: Value, mut from: Value) -> Result<Value, Error> {
+    check_frozen(interp, ary)?;
+
     // Pack an empty `Array` into the given uninitialized `RArray *` so it can
     // be safely marked if an mruby allocation occurs and a GC is triggered in
     // `Array::initialize`.
@@ -292,23 +283,21 @@ pub fn initialize_copy(interp: &mut Artichoke, ary: Value, mut from: Value) -> R
 
 pub fn last(interp: &mut Artichoke, mut ary: Value, num: Option<Value>) -> Result<Value, Error> {
     let array = unsafe { Array::unbox_from_value(&mut ary, interp)? };
-    if let Some(num) = num {
-        // Hack to detect `BigNum`
-        if let Ruby::Float = num.ruby_type() {
-            return Err(RangeError::with_message("bignum too big to convert into `long'").into());
-        }
-        let n = implicitly_convert_to_int(interp, num)?;
-        if let Ok(n) = usize::try_from(n) {
-            let slice = array.last_n(n);
-            let result = Array::from(slice);
-            Array::alloc_value(result, interp)
-        } else {
-            Err(ArgumentError::with_message("negative array size").into())
-        }
-    } else {
+    let Some(num) = num else {
         let last = array.last();
-        Ok(interp.convert(last))
+        return Ok(interp.convert(last));
+    };
+    // Hack to detect `BigNum`
+    if let Ruby::Float = num.ruby_type() {
+        return Err(RangeError::with_message("bignum too big to convert into `long'").into());
     }
+    let n = implicitly_convert_to_int(interp, num)?;
+    let Ok(n) = usize::try_from(n) else {
+        return Err(ArgumentError::with_message("negative array size").into());
+    };
+    let slice = array.last_n(n);
+    let result = Array::from(slice);
+    Array::alloc_value(result, interp)
 }
 
 pub fn len(interp: &mut Artichoke, mut ary: Value) -> Result<usize, Error> {
@@ -317,9 +306,8 @@ pub fn len(interp: &mut Artichoke, mut ary: Value) -> Result<usize, Error> {
 }
 
 pub fn pop(interp: &mut Artichoke, mut ary: Value) -> Result<Value, Error> {
-    if ary.is_frozen(interp) {
-        return Err(FrozenError::with_message("can't modify frozen Array").into());
-    }
+    check_frozen(interp, ary)?;
+
     let mut array = unsafe { Array::unbox_from_value(&mut ary, interp)? };
 
     // SAFETY: The array is repacked without any intervening interpreter heap
@@ -345,9 +333,8 @@ pub fn reverse(interp: &mut Artichoke, mut ary: Value) -> Result<Value, Error> {
 }
 
 pub fn reverse_bang(interp: &mut Artichoke, mut ary: Value) -> Result<Value, Error> {
-    if ary.is_frozen(interp) {
-        return Err(FrozenError::with_message("can't modify frozen Array").into());
-    }
+    check_frozen(interp, ary)?;
+
     let mut array = unsafe { Array::unbox_from_value(&mut ary, interp)? };
 
     // SAFETY: Reversing an `Array` in place does not reallocate it. The array
@@ -364,9 +351,8 @@ pub fn reverse_bang(interp: &mut Artichoke, mut ary: Value) -> Result<Value, Err
 }
 
 pub fn shift(interp: &mut Artichoke, mut ary: Value, count: Option<Value>) -> Result<Value, Error> {
-    if ary.is_frozen(interp) {
-        return Err(FrozenError::with_message("can't modify frozen Array").into());
-    }
+    check_frozen(interp, ary)?;
+
     let mut array = unsafe { Array::unbox_from_value(&mut ary, interp)? };
     if let Some(count) = count {
         let count = implicitly_convert_to_int(interp, count)?;
@@ -419,55 +405,61 @@ pub fn shift(interp: &mut Artichoke, mut ary: Value, count: Option<Value>) -> Re
     }
 }
 
+fn check_frozen(interp: &mut Artichoke, value: Value) -> Result<(), Error> {
+    if !value.is_frozen(interp) {
+        return Ok(());
+    }
+    let mut message = "can't modify frozen Array: ".as_bytes().to_vec();
+    // FIXME: This is a workaround for `Array#inspect` not being implemented in
+    // native code.
+    let inspect = value
+        .funcall(interp, "inspect", &[], None)?
+        .try_convert_into_mut::<&[u8]>(interp)?;
+    message.extend_from_slice(inspect);
+    Err(FrozenError::from(message).into())
+}
+
 #[cfg(test)]
 mod tests {
+    use bstr::ByteSlice;
+
     use super::*;
     use crate::test::prelude::*;
 
     #[test]
     fn mutating_methods_may_raise_frozen_error() {
+        #[track_caller]
+        fn assert_is_frozen_err(result: Result<Value, Error>) {
+            let err = result.unwrap_err();
+            let message = err.message();
+            let class_name = err.name();
+            // ``console
+            // $ irb
+            // [3.4.2] > [1,2,3].freeze.pop
+            // (irb):1:in 'Array#pop': can't modify frozen Array: [1, 2, 3] (FrozenError)
+            // ```
+            assert_eq!(class_name, "FrozenError");
+            assert_eq!(message.as_bstr(), b"can't modify frozen Array: [1, 2, 3]".as_bstr());
+        }
+
         let mut interp = interpreter();
-        let mut slf = interp.eval(b"[1,2,3]").unwrap();
+        let mut slf = interp.eval(b"[1, 2, 3]").unwrap();
+
         slf.freeze(&mut interp).unwrap();
 
         let value = interp.convert(0);
-        assert_eq!(
-            push_single(&mut interp, slf, value).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen Array)",
-        );
-
         let first = interp.convert(0);
-        let second = interp.try_convert_mut(Vec::<u8>::new()).unwrap();
-        assert_eq!(
-            element_assignment(&mut interp, slf, first, second, None)
-                .unwrap_err()
-                .to_string(),
-            "FrozenError (can't modify frozen Array)",
-        );
+        let second = interp.try_convert_mut(vec![42_i64]).unwrap();
 
-        assert_eq!(
-            clear(&mut interp, slf).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen Array)",
-        );
-
-        assert_eq!(
-            push(&mut interp, slf, None).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen Array)",
-        );
-
-        assert_eq!(
-            concat(&mut interp, slf, []).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen Array)",
-        );
-
-        assert_eq!(
-            reverse_bang(&mut interp, slf).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen Array)",
-        );
-
-        assert_eq!(
-            shift(&mut interp, slf, None).unwrap_err().to_string(),
-            "FrozenError (can't modify frozen Array)",
-        );
+        assert_is_frozen_err(push_single(&mut interp, slf, value));
+        assert_is_frozen_err(element_assignment(&mut interp, slf, first, second, None));
+        assert_is_frozen_err(clear(&mut interp, slf));
+        assert_is_frozen_err(push(&mut interp, slf, None));
+        assert_is_frozen_err(concat(&mut interp, slf, []));
+        assert_is_frozen_err(initialize(&mut interp, slf, Some(first), Some(second), None));
+        assert_is_frozen_err(initialize_copy(&mut interp, slf, value));
+        assert_is_frozen_err(pop(&mut interp, slf));
+        assert_is_frozen_err(reverse_bang(&mut interp, slf));
+        assert_is_frozen_err(shift(&mut interp, slf, None));
     }
 }
