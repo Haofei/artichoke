@@ -1778,6 +1778,8 @@ fn check_frozen(interp: &mut Artichoke, mut value: Value) -> Result<(), Error> {
 
 #[cfg(test)]
 mod tests {
+    use bstr::ByteSlice;
+
     use super::*;
     use crate::test::prelude::*;
 
