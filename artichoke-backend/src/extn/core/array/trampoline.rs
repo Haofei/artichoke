@@ -406,18 +406,17 @@ pub fn shift(interp: &mut Artichoke, mut ary: Value, count: Option<Value>) -> Re
 }
 
 fn check_frozen(interp: &mut Artichoke, value: Value) -> Result<(), Error> {
-    if value.is_frozen(interp) {
-        let mut message = "can't modify frozen Array: ".as_bytes().to_vec();
-        // FIXME: This is a workaround for `Array#inspect` not being implemented
-        // in native code.
-        let inspect = value
-            .funcall(interp, "inspect", &[], None)?
-            .try_convert_into_mut::<&[u8]>(interp)?;
-        message.extend_from_slice(inspect);
-        return Err(FrozenError::from(message).into());
-    }
-
-    Ok(())
+    let true = value.is_frozen(interp) else {
+        return Ok(());
+    };
+    let mut message = "can't modify frozen Array: ".as_bytes().to_vec();
+    // FIXME: This is a workaround for `Array#inspect` not being implemented in
+    // native code.
+    let inspect = value
+        .funcall(interp, "inspect", &[], None)?
+        .try_convert_into_mut::<&[u8]>(interp)?;
+    message.extend_from_slice(inspect);
+    Err(FrozenError::from(message).into())
 }
 
 #[cfg(test)]
@@ -455,9 +454,11 @@ mod tests {
         assert_is_frozen_err(push_single(&mut interp, slf, value));
         assert_is_frozen_err(element_assignment(&mut interp, slf, first, second, None));
         assert_is_frozen_err(clear(&mut interp, slf));
-        assert_is_frozen_err(pop(&mut interp, slf));
         assert_is_frozen_err(push(&mut interp, slf, None));
         assert_is_frozen_err(concat(&mut interp, slf, []));
+        assert_is_frozen_err(initialize(&mut interp, slf, Some(first), Some(second), None));
+        assert_is_frozen_err(initialize_copy(&mut interp, slf, value));
+        assert_is_frozen_err(pop(&mut interp, slf));
         assert_is_frozen_err(reverse_bang(&mut interp, slf));
         assert_is_frozen_err(shift(&mut interp, slf, None));
     }
