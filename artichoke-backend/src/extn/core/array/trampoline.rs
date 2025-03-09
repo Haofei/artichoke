@@ -406,9 +406,9 @@ pub fn shift(interp: &mut Artichoke, mut ary: Value, count: Option<Value>) -> Re
 }
 
 fn check_frozen(interp: &mut Artichoke, value: Value) -> Result<(), Error> {
-    let true = value.is_frozen(interp) else {
+    if !value.is_frozen(interp) {
         return Ok(());
-    };
+    }
     let mut message = "can't modify frozen Array: ".as_bytes().to_vec();
     // FIXME: This is a workaround for `Array#inspect` not being implemented in
     // native code.

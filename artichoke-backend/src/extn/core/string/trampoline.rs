@@ -1764,9 +1764,9 @@ pub fn is_valid_encoding(interp: &mut Artichoke, mut value: Value) -> Result<Val
 }
 
 fn check_frozen(interp: &mut Artichoke, mut value: Value) -> Result<(), Error> {
-    let true = value.is_frozen(interp) else {
+    if !value.is_frozen(interp) {
         return Ok(());
-    };
+    }
     let s = unsafe { super::String::unbox_from_value(&mut value, interp)? };
     let message = "can't modify frozen String: "
         .chars()
