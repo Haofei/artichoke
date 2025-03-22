@@ -120,21 +120,25 @@ fn build_date() -> Date {
     //
     // https://reproducible-builds.org/docs/source-date-epoch/
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
-    let datetime = if let Some(timestamp) = env::var_os("SOURCE_DATE_EPOCH") {
-        let seconds_since_epoch = timestamp
-            .into_string()
-            .expect("SOURCE_DATE_EPOCH was not valid UTF-8")
-            .parse::<i64>()
-            .expect("SOURCE_DATE_EPOCH was not a valid integer");
-        UtcDateTime::from_timespec(seconds_since_epoch, 0)
-            .expect("Could not construct datetime from SOURCE_DATE_EPOCH")
-    } else {
-        UtcDateTime::now().expect("Could not retreive current timestamp")
+
+    let Some(timestamp) = env::var_os("SOURCE_DATE_EPOCH") else {
+        return UtcDateTime::now().expect("Could not retreive current timestamp").into();
     };
+
+    let seconds_since_epoch = timestamp
+        .into_string()
+        .expect("SOURCE_DATE_EPOCH was not valid UTF-8")
+        .parse::<i64>()
+        .expect("SOURCE_DATE_EPOCH was not a valid integer");
+    let datetime = UtcDateTime::from_timespec(seconds_since_epoch, 0)
+        .expect("Could not construct datetime from SOURCE_DATE_EPOCH");
     datetime.into()
 }
 
 fn revision_count() -> Option<usize> {
+    // Ensure the build script reruns when Git HEAD changes
+    println!("cargo:rerun-if-changed=.git/HEAD");
+
     let revision_count = Command::new("git")
         .arg("rev-list")
         .arg("--count")
