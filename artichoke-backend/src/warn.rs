@@ -16,6 +16,13 @@ impl Warn for Artichoke {
 
     fn warn(&mut self, message: &[u8]) -> Result<(), Self::Error> {
         let state = self.state.as_deref_mut().ok_or_else(InterpreterExtractError::new)?;
+
+        // FIXME: Avoid direct printing to stderr here.
+        //
+        // Ruby warnings should be exclusively handled by `Warning.warn` in Ruby code to avoid
+        // duplicate messages.
+        //
+        // See issue: https://github.com/artichoke/artichoke/issues/2844
         if let Err(err) = state.output.write_stderr(b"rb warning: ") {
             let mut message = String::from("Failed to write warning to $stderr: ");
             write!(&mut message, "{err}").map_err(WriteError::from)?;
@@ -31,6 +38,7 @@ impl Warn for Artichoke {
             write!(&mut message, "{err}").map_err(WriteError::from)?;
             return Err(IOError::from(message).into());
         }
+
         let warning = self
             .module_of::<Warning>()?
             .ok_or_else(|| NotDefinedError::module("Warning"))?;
