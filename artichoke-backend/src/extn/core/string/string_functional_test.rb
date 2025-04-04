@@ -703,7 +703,6 @@ def test_string_replace_frozen
   end
 end
 
-# Optionally, you can auto-run the spec if this file is loaded as a script:
 if $PROGRAM_NAME == __FILE__
   result = spec
   puts "All String functional tests passed: #{result}"

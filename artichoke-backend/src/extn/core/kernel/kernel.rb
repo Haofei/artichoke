@@ -162,7 +162,7 @@ module Kernel
       #
       # See issue: https://github.com/artichoke/artichoke/issues/2844
       out = $stderr || $stdout || self
-      out.print(warning)
+      out.write(warning)
     end
     nil
   end

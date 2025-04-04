@@ -491,6 +491,33 @@ fn strftime_with_encoding(
 ) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
 
+    // TODO: MRI checks whether the string encoding for the format string is ASCII
+    // compatible. If it is not, it raises an `ArgumentError`.
+    //
+    // Currently, `spinoso-string` only supports ASCII compatible encodings, so
+    // this check is not necessary.
+    //
+    // Ref: <https://github.com/ruby/ruby/blob/v3_4_2/time.c#L5203-L5205>
+    //
+    // ```c
+    // if (!rb_enc_str_asciicompat_p(format)) {
+    //     rb_raise(rb_eArgError, "format should have ASCII compatible encoding");
+    // }
+    // ```
+
+    if format.is_empty() {
+        // ```console
+        // [3.4.2] > Time.now.strftime ""
+        // => ""
+        // [3.4.2] > $VERBOSE = true
+        // => true
+        // [3.4.2] > Time.now.strftime ""
+        // (irb):4: warning: strftime called with empty format string
+        // => ""
+        // ```
+        interp.warn(b"strftime called with empty format string")?;
+    }
+
     let bytes: Vec<u8> = time.strftime(format).map_err(|e| {
         // `InvalidFormatString` is the only true `ArgumentError`, where as the
         // rest that can be thrown from `strftime` are runtime failures.
