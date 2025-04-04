@@ -154,8 +154,13 @@ module Kernel
     msg.each do |warning|
       warning = warning.to_s
       warning << "\n" unless warning[-1] == "\n"
-      # TODO: This should call `Warning.warn` but due to method visibility
-      # limitations of the mruby VM, we cannot shadow the warn method there.
+
+      # FIXME: Delegate warnings to `Warning.warn` instead of directly printing
+      # to stderr. This prevents duplicate output and aligns with MRI behavior.
+      # Currently blocked by method visibility limitations in the mruby VM,
+      # which prevent shadowing `Kernel#warn` with `Warning.warn`.
+      #
+      # See issue: https://github.com/artichoke/artichoke/issues/2844
       out = $stderr || $stdout || self
       out.print(warning)
     end
