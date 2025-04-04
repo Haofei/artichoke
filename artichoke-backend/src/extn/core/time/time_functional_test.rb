@@ -3,6 +3,7 @@
 def spec
   time_strftime_utf8
   time_strftime_binary
+  time_strftime_empty_warning_verbose
   expect_failure_if_artichoke(RuntimeError, /Unexpected warning emitted when verbose mode off, got: /) do
     # Artichoke does not support the `$VERBOSE` global variable.
     # Warnings are unconditionally printed to `$stderr`.
@@ -80,7 +81,7 @@ def time_strftime_binary
   raise unless t.strftime('%c 😀'.b).length == 29
 end
 
-def time_strftime_empty_warning
+def time_strftime_empty_warning_verbose
   original_verbose = $VERBOSE
   original_stderr = $stderr
 
@@ -101,9 +102,15 @@ def time_strftime_empty_warning
     $VERBOSE = original_verbose
     $stderr = original_stderr
   end
+end
 
-  # Ensure no warning emitted if not verbose
-  captured_warnings.clear
+def time_strftime_empty_warning
+  original_verbose = $VERBOSE
+  original_stderr = $stderr
+
+  captured_warnings = []
+  fake_stderr = Object.new
+  fake_stderr.define_singleton_method(:write) { |msg| captured_warnings << msg }
 
   begin
     $VERBOSE = false
