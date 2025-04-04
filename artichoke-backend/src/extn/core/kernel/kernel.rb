@@ -157,7 +157,7 @@ module Kernel
       # TODO: This should call `Warning.warn` but due to method visibility
       # limitations of the mruby VM, we cannot shadow the warn method there.
       out = $stderr || $stdout || self
-      out.print(warning)
+      out.write(warning)
     end
     nil
   end
