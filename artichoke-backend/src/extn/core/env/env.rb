@@ -119,11 +119,11 @@ class << ENV
     select!(&blk)
   end
 
-  def has_key?(name) # rubocop:disable Naming/PredicateName
+  def has_key?(name)
     to_h.key?(name)
   end
 
-  def has_value?(value) # rubocop:disable Naming/PredicateName
+  def has_value?(value)
     to_h.value?(value)
   end
 
