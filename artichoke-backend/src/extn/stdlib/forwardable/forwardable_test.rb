@@ -18,8 +18,6 @@ def spec
   # reqires STDOUT impl
   object_extend
   another_example
-
-  true
 end
 
 def lookup

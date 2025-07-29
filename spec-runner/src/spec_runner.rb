@@ -58,7 +58,7 @@ module Artichoke
         YELLOW = "\e[33m"
         PLAIN = "\e[0m"
 
-        def self.run_specs(*specs)
+        def self.run_specs(*specs) # rubocop:disable Naming/PredicateMethod
           specs = specs.flatten
           MSpec.register_files(specs)
 
@@ -219,7 +219,7 @@ module Artichoke
       end
 
       class Summary
-        def self.run_specs(*specs)
+        def self.run_specs(*specs) # rubocop:disable Naming/PredicateMethod
           specs = specs.flatten
           MSpec.register_files(specs)
 
@@ -238,7 +238,7 @@ module Artichoke
       end
 
       class Yaml
-        def self.run_specs(*specs)
+        def self.run_specs(*specs) # rubocop:disable Naming/PredicateMethod
           specs = specs.flatten
           MSpec.register_files(specs)
 
@@ -257,7 +257,7 @@ module Artichoke
       end
 
       class Tagger
-        def self.run_specs(*specs)
+        def self.run_specs(*specs) # rubocop:disable Naming/PredicateMethod
           specs = specs.flatten
           MSpec.register_files(specs)
 

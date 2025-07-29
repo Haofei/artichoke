@@ -10,8 +10,6 @@ def spec
   abbrev_array
   abbrev_abbrev
   abbrev_abbrev_pattern
-
-  true
 end
 
 def abbrev

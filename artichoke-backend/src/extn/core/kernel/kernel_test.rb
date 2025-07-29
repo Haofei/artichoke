@@ -15,8 +15,6 @@ def spec
   kernel_p_no_args
   kernel_p_one_arg
   kernel_p_array_args
-
-  true
 end
 
 # https://ruby-doc.org/core-2.6.3/Kernel.html#method-i-catch

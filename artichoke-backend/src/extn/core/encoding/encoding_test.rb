@@ -5,8 +5,6 @@
 def spec
   encoding_name
   encoding_simple_ex
-
-  true
 end
 
 def encoding_name

@@ -6,8 +6,6 @@ def spec
   parse_json
   generate_json
   convert_obj_to_json
-
-  true
 end
 
 def parse_json

@@ -902,7 +902,7 @@ class Array
       while i < size
         result = [self[i]]
         if (kcombinations - 1).positive?
-          ary = self[0...i] + self[i + 1..-1]
+          ary = self[0...i] + self[(i + 1)..-1]
           ary.permutation(kcombinations - 1) do |c|
             yield result + c
           end

@@ -9,8 +9,6 @@ def spec
     # Warnings are unconditionally printed to `$stderr`.
     time_strftime_empty_warning
   end
-
-  true
 end
 
 ##
