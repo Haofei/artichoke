@@ -19,8 +19,6 @@ def spec
   uri_parse
   uri_regexp
   uri_split
-
-  true
 end
 
 def basic_example

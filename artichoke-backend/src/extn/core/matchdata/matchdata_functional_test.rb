@@ -7,8 +7,6 @@ def spec
   inspect_with_numbered_captures
   inspect_with_named_captures
   inspect_capture_control_character
-
-  true
 end
 
 def setup

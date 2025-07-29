@@ -38,8 +38,6 @@ def spec
 
   test_string_initialize_copy_frozen
   test_string_replace_frozen
-
-  true
 end
 
 ##

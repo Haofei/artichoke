@@ -37,8 +37,6 @@ def spec
   test_values_at
   test_gh_1630_functional
   test_inspect_emoji_partial
-
-  true
 end
 
 def test_strscan

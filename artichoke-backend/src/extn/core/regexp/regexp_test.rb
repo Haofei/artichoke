@@ -6,8 +6,6 @@ def spec
   regexp_initialize_already_init_literal
   regexp_initialize_already_init_compiled
   regexp_initialize_only_literals_frozen_by_default
-
-  true
 end
 
 def regexp_initialize_already_init_literal

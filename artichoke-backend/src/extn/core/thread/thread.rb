@@ -326,7 +326,7 @@ class Mutex
     unlock
   end
 
-  def try_lock
+  def try_lock # rubocop:disable Naming/PredicateMethod
     lock
     locked? && owned?
   end

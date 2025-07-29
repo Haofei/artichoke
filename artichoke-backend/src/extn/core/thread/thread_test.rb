@@ -8,8 +8,6 @@ def spec
   thread_spawn
   thread_locals
   thread_abort_on_exception
-
-  true
 end
 
 def thread_required_by_default?

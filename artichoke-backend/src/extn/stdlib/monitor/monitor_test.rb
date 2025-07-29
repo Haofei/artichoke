@@ -4,8 +4,6 @@ require 'monitor'
 
 def spec
   monitor_mixin
-
-  true
 end
 
 def monitor_mixin

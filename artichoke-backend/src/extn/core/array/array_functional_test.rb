@@ -28,8 +28,6 @@ def spec
   dynamic_pop
 
   reverse
-
-  true
 end
 
 def empty_get

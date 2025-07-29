@@ -567,7 +567,7 @@ class String
     buf = ''
     remainder = dup
     until match.nil? || remainder.empty?
-      buf << remainder[0..match.begin(0) - 1] if match.begin(0).positive?
+      buf << remainder[0..(match.begin(0) - 1)] if match.begin(0).positive?
       buf << replace.call(match[0])
       remainder = remainder[match.end(0)..-1]
       remainder = remainder[1..-1] if match.begin(0) == match.end(0)
@@ -919,7 +919,7 @@ class String
         return chunks
       end
       chunks << s[0, index]
-      s = s[index + pattern.length..-1]
+      s = s[(index + pattern.length)..-1]
     end
     chunks << ''
     chunks
@@ -991,7 +991,7 @@ class String
 
     buf = ''
     remainder = dup
-    buf << remainder[0..match.begin(0) - 1] if match.begin(0).positive?
+    buf << remainder[0..(match.begin(0) - 1)] if match.begin(0).positive?
     buf << replace.call(match[0])
     remainder = remainder[match.end(0)..-1]
     remainder = remainder[1..-1] if match.begin(0) == match.end(0)

@@ -75,9 +75,6 @@ def spec
   test_hash_replace_same_object
 
   test_hash_frozen_error_on_mutating_methods
-
-  # If all tests pass, return a truthy value
-  true
 end
 
 ##
