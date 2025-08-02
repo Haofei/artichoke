@@ -87,7 +87,7 @@ impl Default for State {
 #[derive(Debug)]
 pub struct Parser<'a> {
     interp: &'a mut Artichoke,
-    parser: NonNull<sys::mrb_parser_state>,
+    inner: NonNull<sys::mrb_parser_state>,
     context: NonNull<sys::mrbc_context>,
 }
 
@@ -104,7 +104,7 @@ impl<'a> Parser<'a> {
         let parser = NonNull::new(parser)?;
         Some(Self {
             interp,
-            parser,
+            inner: parser,
             context,
         })
     }
@@ -134,7 +134,7 @@ impl<'a> Parser<'a> {
 
         // SAFETY: The parser is already initialized and the context is owned by
         // the Artichoke state.
-        let parser = unsafe { self.parser.as_mut() };
+        let parser = unsafe { self.inner.as_mut() };
         // SAFETY: The context is already initialized and the context is owned
         // by the Artichoke state.
         let context = unsafe { self.context.as_mut() };
@@ -218,7 +218,9 @@ impl<'a> Parser<'a> {
 
 impl Drop for Parser<'_> {
     fn drop(&mut self) {
-        let Self { interp, parser, .. } = self;
+        let Self {
+            interp, inner: parser, ..
+        } = self;
 
         // SAFETY: `mrb_parser_free` requires an initialized mruby interpreter,
         // and calling `interp.with_ffi_boundary` ensures the interpreter is

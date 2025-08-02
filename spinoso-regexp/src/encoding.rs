@@ -107,19 +107,7 @@ impl TryFrom<&str> for Encoding {
     type Error = InvalidEncodingError;
 
     fn try_from(encoding: &str) -> Result<Self, Self::Error> {
-        if encoding.contains('u') && encoding.contains('n') {
-            return Err(InvalidEncodingError::new());
-        }
-        let mut enc = None;
-        for flag in encoding.bytes() {
-            match flag {
-                b'u' | b's' | b'e' if enc.is_none() => enc = Some(Encoding::Fixed),
-                b'n' if enc.is_none() => enc = Some(Encoding::No),
-                b'i' | b'm' | b'x' | b'o' => continue,
-                _ => return Err(InvalidEncodingError::new()),
-            }
-        }
-        Ok(enc.unwrap_or_default())
+        encoding.as_bytes().try_into()
     }
 }
 
@@ -135,7 +123,7 @@ impl TryFrom<&[u8]> for Encoding {
             match flag {
                 b'u' | b's' | b'e' if enc.is_none() => enc = Some(Encoding::Fixed),
                 b'n' if enc.is_none() => enc = Some(Encoding::No),
-                b'i' | b'm' | b'x' | b'o' | b'l' => continue,
+                b'i' | b'm' | b'x' | b'o' | b'l' => {}
                 _ => return Err(InvalidEncodingError::new()),
             }
         }
