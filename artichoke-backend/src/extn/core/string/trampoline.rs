@@ -1669,7 +1669,7 @@ pub fn to_i(interp: &mut Artichoke, mut value: Value, base: Option<Value>) -> Re
                 )
             {
                 slice = &slice[2..];
-            };
+            }
 
             // This can only be 2-36 inclusive in this branch, so unwrap is safe
             u32::try_from(x).unwrap()

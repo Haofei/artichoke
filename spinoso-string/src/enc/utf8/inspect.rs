@@ -103,7 +103,7 @@ impl Iterator for Inspect<'_> {
                     .expect("Invalid UTF-8 byte sequence should be at most 3 bytes long");
                 return self.byte_literal.next();
             }
-        };
+        }
         self.flags.emit_trailing_quote()
     }
 }

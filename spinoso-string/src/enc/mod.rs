@@ -142,7 +142,7 @@ impl EncodedString {
     pub fn set_encoding(&mut self, encoding: Encoding) {
         if self.encoding() == encoding {
             return;
-        };
+        }
         let s = mem::take(self);
         let buf = s.into_buf();
         *self = Self::new(buf, encoding);
@@ -269,7 +269,7 @@ impl EncodedString {
             EncodedString::Ascii(inner) => inner.truncate(len),
             EncodedString::Binary(inner) => inner.truncate(len),
             EncodedString::Utf8(inner) => inner.truncate(len),
-        };
+        }
     }
 
     #[inline]

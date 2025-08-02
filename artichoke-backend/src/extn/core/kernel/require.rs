@@ -274,7 +274,7 @@ mod test {
                 .eval(b"require '/artichoke/virtual_root/src/lib/foo/bar.rb'")
                 .unwrap();
             assert!(!result.try_convert_into::<bool>(&interp).unwrap());
-        };
+        }
     }
 
     #[test]

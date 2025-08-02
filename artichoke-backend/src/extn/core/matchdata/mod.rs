@@ -196,7 +196,7 @@ impl MatchData {
                         .iter()
                         .copied()
                         .filter_map(|index| captures.get(index).and_then(Option::as_deref))
-                        .last();
+                        .next_back();
                     Ok(CaptureMatch::Single(capture.map(<[_]>::to_vec)))
                 } else {
                     let mut message = String::from("undefined group name reference: \"");

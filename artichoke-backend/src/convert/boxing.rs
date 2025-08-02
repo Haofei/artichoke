@@ -298,7 +298,7 @@ where
         // Inject the raw data pointer into the given `mrb_value`.
         let mut obj = into.inner();
         unsafe {
-            sys::mrb_sys_data_init(&mut obj, ptr.cast::<c_void>(), spec.data_type());
+            sys::mrb_sys_data_init(&raw mut obj, ptr.cast::<c_void>(), spec.data_type());
         }
         Ok(Value::from(obj))
     }

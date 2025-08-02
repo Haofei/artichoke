@@ -58,7 +58,7 @@ where
     // SAFETY: The caller upholds that `mrb` is a valid interpreter. The
     // `Protect` trait is implemented for `T` which means that `T` has a `run`
     // function that is safe to call with the `mrb` and `data` arguments.
-    let value = unsafe { sys::mrb_protect(mrb, Some(T::run), data, &mut state) };
+    let value = unsafe { sys::mrb_protect(mrb, Some(T::run), data, &raw mut state) };
 
     // SAFETY: the caller upholds that `mrb` is a valid interpreter and can be
     // dereferenced. If non-null, `mrb->exc` is a valid `mrb_value` which can be
