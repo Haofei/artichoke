@@ -707,87 +707,62 @@ fn is_next_ident_exhausting(name: &[u8]) -> bool {
     }
 }
 
-// This function is defined by a macro in `parse.y` in MRI.
-//
-// ```c
-// #define BIT(c, idx) (((c) / 32 - 1 == idx) ? (1U << ((c) % 32)) : 0)
-// #define SPECIAL_PUNCT(idx) ( \
-// 	BIT('~', idx) | BIT('*', idx) | BIT('$', idx) | BIT('?', idx) | \
-// 	BIT('!', idx) | BIT('@', idx) | BIT('/', idx) | BIT('\\', idx) | \
-// 	BIT(';', idx) | BIT(',', idx) | BIT('.', idx) | BIT('=', idx) | \
-// 	BIT(':', idx) | BIT('<', idx) | BIT('>', idx) | BIT('\"', idx) | \
-// 	BIT('&', idx) | BIT('`', idx) | BIT('\'', idx) | BIT('+', idx) | \
-// 	BIT('0', idx))
-// const unsigned int ruby_global_name_punct_bits[] = {
-//     SPECIAL_PUNCT(0),
-//     SPECIAL_PUNCT(1),
-//     SPECIAL_PUNCT(2),
-// };
-// ```
-//
-// The contents of `ruby_global_name_punct_bits` are:
-//
-// ```console
-// [2.6.6] > def bit(c, idx); c / 32 - 1 == idx ? 1 << (c % 32) : 0; end
-// [2.6.6] > chars = ["~", "*", "$", "?", "!", "@", "/", "\\", ";", ",", ".", "=", ":", "<", ">", "\"", "&", "`", "'", "+", "0"]
-//
-// [2.6.6] > chars.map(&:ord).map { |ch| bit(ch, 0) }.reduce(0, :|)
-// => 4227980502
-// [2.6.6] > chars.map(&:ord).map { |ch| bit(ch, 1) }.reduce(0, :|)
-// => 268435457
-// [2.6.6] > chars.map(&:ord).map { |ch| bit(ch, 2) }.reduce(0, :|)
-// => 1073741825
-// ```
-//
-// Which corresponds to a fixed set of 21 ASCII symbols:
-//
-// ```ruby
-// def is_special_global_punct(ch)
-//   idx = (ch - 0x20) / 32;
-//   case idx
-//   when 0 then (4_227_980_502 >> (ch % 32)) & 1 > 0
-//   when 1 then (268_435_457 >> (ch % 32)) & 1 > 0
-//   when 2 then (1_073_741_825 >> (ch % 32)) & 1 > 0
-//   else
-//     false
-//   end
-// end
-//
-// h = {}
-// (0..255).each do |ch|
-//   h[ch.chr] = ch if is_special_global_punct(ch)
-// end
-// h.keys.map {|k| "b'#{k.inspect[1..-2]}'"}.join(" | ")
-// ```
-//
-// TODO: Switch to generating this table inside the const function once const
-// functions are expressive enough. This requires const `match`, `if`, and loop
-// which will be stable in Rust 1.46.0.
+/// Returns true if `ch` is one of the “special global punctuation” bytes
+/// as defined by MRI’s `SPECIAL_PUNCT` macro.
 #[inline]
-fn is_special_global_punct(ch: u8) -> bool {
-    matches!(
-        ch,
-        b'!' | b'"'
-            | b'$'
-            | b'&'
-            | b'\''
-            | b'*'
-            | b'+'
-            | b','
-            | b'.'
-            | b'/'
-            | b'0'
-            | b':'
-            | b';'
-            | b'<'
-            | b'='
-            | b'>'
-            | b'?'
-            | b'@'
-            | b'\\'
-            | b'`'
-            | b'~'
-    )
+pub const fn is_special_global_punct(ch: u8) -> bool {
+    // Derived from Ruby MRI `parse.y`:
+    //
+    // ```c
+    // #define BIT(c, idx) (((c) / 32 - 1 == idx) ? (1U << ((c) % 32)) : 0)
+    // #define SPECIAL_PUNCT(idx) (
+    //     BIT('~', idx) | BIT('*', idx) | BIT('$', idx) | BIT('?', idx) |
+    //     BIT('!', idx) | BIT('@', idx) | BIT('/', idx) | BIT('\\', idx) |
+    //     BIT(';', idx) | BIT(',', idx) | BIT('.', idx) | BIT('=', idx) |
+    //     BIT(':', idx) | BIT('<', idx) | BIT('>', idx) | BIT('\"', idx) |
+    //     BIT('&', idx) | BIT('`', idx) | BIT('\'', idx) | BIT('+', idx) |
+    //     BIT('0', idx))
+    // const unsigned int ruby_global_name_punct_bits[] = {
+    //     SPECIAL_PUNCT(0),
+    //     SPECIAL_PUNCT(1),
+    //     SPECIAL_PUNCT(2),
+    // };
+    // ```
+    //
+    // The three constants computed by Ruby are:
+    //   SPECIAL_PUNCT(0) → 4227980502
+    //   SPECIAL_PUNCT(1) →  268435457
+    //   SPECIAL_PUNCT(2) → 1073741825
+    const fn make_ruby_global_name_punct_bits() -> [u32; 3] {
+        let mut bits = [0u32; 3];
+        // exactly the 21 chars from SPECIAL_PUNCT in MRI
+        let chars = [
+            b'~', b'*', b'$', b'?', b'!', b'@', b'/', b'\\', b';', b',', b'.', b'=', b':', b'<', b'>', b'"', b'&',
+            b'`', b'\'', b'+', b'0',
+        ];
+        let mut i = 0;
+        while i < chars.len() {
+            let c = chars[i];
+            // idx = (c / 32) - 1
+            let idx = (c / 32).wrapping_sub(1) as usize;
+            if idx < bits.len() {
+                bits[idx] |= 1 << (c % 32);
+            }
+            i += 1;
+        }
+        bits
+    }
+
+    // Precomputed table exactly matching MRI’s `ruby_global_name_punct_bits`.
+    const RUBY_GLOBAL_NAME_PUNCT_BITS: [u32; 3] = make_ruby_global_name_punct_bits();
+
+    // MRI does: idx = (ch / 32) - 1; then tests bit (ch % 32) in table[idx]
+    let idx = (ch / 32).wrapping_sub(1) as usize;
+    if idx < RUBY_GLOBAL_NAME_PUNCT_BITS.len() {
+        ((RUBY_GLOBAL_NAME_PUNCT_BITS[idx] >> (ch % 32)) & 1) != 0
+    } else {
+        false
+    }
 }
 
 #[cfg(test)]

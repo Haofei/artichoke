@@ -6,7 +6,7 @@ use crate::sys;
 use crate::types::{Ruby, Rust};
 use crate::value::Value;
 
-// TODO: when ,mruby is gone, float conversion should not allocate.
+// TODO: when mruby is gone, float conversion should not allocate.
 impl ConvertMut<f64, Value> for Artichoke {
     fn convert_mut(&mut self, value: f64) -> Value {
         let float = unsafe { self.with_ffi_boundary(|mrb| sys::mrb_sys_float_value(mrb, value)) };
