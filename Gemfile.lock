@@ -44,7 +44,6 @@ GEM
 PLATFORMS
   ruby
   x64-mingw-ucrt
-  x64-mingw32
 
 DEPENDENCIES
   bundler-audit (~> 0.9)
@@ -54,4 +53,4 @@ DEPENDENCIES
   tomlrb (~> 2.0)
 
 BUNDLED WITH
-   2.6.2
+   2.7.1
