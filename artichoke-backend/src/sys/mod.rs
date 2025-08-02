@@ -27,6 +27,10 @@ mod args;
     clippy::restriction,
     reason = "generated code"
 )]
+#[expect(
+    unnecessary_transmutes,
+    reason = "bindgen bitfields codegen under Rust 1.88+ - https://github.com/rust-lang/rust-bindgen/issues/3241"
+)]
 mod ffi {
     include!(concat!(env!("OUT_DIR"), "/ffi.rs"));
 }
