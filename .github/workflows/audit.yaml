@@ -62,4 +62,4 @@ jobs:
           arguments: --locked --all-features
           command: check ${{ matrix.checks }}
           command-arguments: --show-stats
-          rust-version: "1.83.0"
+          rust-version: "1.88.0"
