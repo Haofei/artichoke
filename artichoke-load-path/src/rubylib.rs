@@ -226,10 +226,7 @@ impl Rubylib {
     pub fn read_file(&self, path: &Path) -> io::Result<Vec<u8>> {
         // The `Rubylib` loader only loads relative paths in `RUBYLIB`.
         if path.is_absolute() {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Only relative paths can be loaded from RUBYLIB",
-            ));
+            return Err(io::Error::other("Only relative paths can be loaded from RUBYLIB"));
         }
         for load_path in &*self.load_paths {
             let path = load_path.join(path);
@@ -292,7 +289,7 @@ impl Rubylib {
             if let Ok(handle) = Handle::from_path(&path) {
                 match self.loaded_features.entry(handle) {
                     Entry::Occupied(_) => {
-                        return Err(io::Error::new(io::ErrorKind::Other, "file is already required"));
+                        return Err(io::Error::other("file is already required"));
                     }
                     Entry::Vacant(entry) => {
                         entry.insert(path);

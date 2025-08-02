@@ -510,7 +510,7 @@ impl Utf8Str {
                     }
                 }
             }
-        };
+        }
 
         // Scan the slice for the span of characters we want to return.
         remaining = end - start;

@@ -323,7 +323,7 @@ where
             // Gracefully exit on CTRL-D EOF
             Err(ReadlineError::Eof) => break,
             Err(err) => return Err(Box::new(UnhandledReadlineError(err))),
-        };
+        }
     }
     Ok(())
 }

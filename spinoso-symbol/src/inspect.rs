@@ -326,7 +326,7 @@ impl Iterator for State<'_> {
                 self.forward_byte_literal = InvalidUtf8ByteSequence::try_from(chunk).unwrap();
                 return self.forward_byte_literal.next();
             }
-        };
+        }
         if let Some(ch) = self.flags.emit_trailing_quote() {
             return Some(ch);
         }

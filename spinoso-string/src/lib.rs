@@ -2347,7 +2347,7 @@ fn chomp(string: &mut String, separator: Option<&[u8]>) -> bool {
                     iter.next();
                 }
                 Some(_) | None => {}
-            };
+            }
             let truncate_to_len = iter.count();
             string.inner.truncate(truncate_to_len);
             truncate_to_len != original_len

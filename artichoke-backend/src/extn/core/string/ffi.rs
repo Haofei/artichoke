@@ -236,19 +236,19 @@ unsafe extern "C-unwind" fn mrb_str_resize(
     let inner = string.take();
     let value = String::box_into_value(inner, value, &mut guard).expect("String reboxing should not fail");
 
-    match result {
-        Ok(()) => value.inner(),
+    if let Ok(()) = result {
+        value.inner()
+    } else {
         // NOTE: Ideally this code would distinguish between a capacity overflow
-        // (string too large) vs an out of memory condition (allocation failure).
-        // This is not possible on stable Rust since `TryReserveErrorKind` is
-        // unstable.
-        Err(_) => {
-            // NOTE: This code can't use an `Error` unified exception trait object.
-            // Since we're in memory error territory, we're not sure if we can
-            // allocate the `Box` it requires.
-            let err = NoMemoryError::with_message("out of memory");
-            error::raise(guard, err);
-        }
+        // (string too large) vs an out of memory condition (allocation
+        // failure).  This is not possible on stable Rust since
+        // `TryReserveErrorKind` is unstable.
+        //
+        // NOTE: This code can't use an `Error` unified exception trait object.
+        // Since we're in memory error territory, we're not sure if we can
+        // allocate the `Box` it requires.
+        let err = NoMemoryError::with_message("out of memory");
+        error::raise(guard, err);
     }
 }
 

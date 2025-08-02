@@ -135,7 +135,7 @@ impl<'a, 'b> Center<'a, 'b> {
     #[must_use]
     pub(crate) fn with_chars_width_and_padding(s: Chars<'a>, padding_width: usize, padding: &'b [u8]) -> Self {
         let pre_pad = padding_width / 2;
-        let post_pad = (padding_width + 1) / 2;
+        let post_pad = padding_width.div_ceil(2);
         let left = padding.iter().cycle().take(pre_pad);
         let right = padding.iter().cycle().take(post_pad);
         Self {
