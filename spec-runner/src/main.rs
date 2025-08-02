@@ -217,7 +217,7 @@ pub fn is_require_path(config: &Config, name: &str) -> bool {
         let (_, suite) = suites.iter().find(|(name, _)| OsStr::new(name) == suite_name)?;
         let spec_name = components.next()?.as_os_str().to_str()?;
 
-        let last = if let Some(last) = components.last() {
+        let last = if let Some(last) = components.next_back() {
             last.as_os_str().to_str()?
         } else {
             spec_name
