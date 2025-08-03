@@ -64,7 +64,6 @@ jobs:
           command-arguments: --show-stats
           rust-version: "1.88.0"
 
-
   zizmor:
     name: Run zizmor 🌈
     runs-on: ubuntu-latest
