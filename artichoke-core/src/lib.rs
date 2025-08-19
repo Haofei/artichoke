@@ -78,8 +78,7 @@
 //!   current filename.
 //! - [`Prng`][core-prng]: An interpreter-level pseudorandom number generator
 //!   that is the backend for [`Random::DEFAULT`].
-//! - [`Regexp`][core-regexp]: Manipulate [`Regexp`][regexp-globals] global
-//!   state.
+//! - [`Regexp`][core-regexp]: Manipulate interpreter-global `Regexp` state.
 //! - [`ReleaseMetadata`][core-releasemetadata]: Enable interpreters to describe
 //!   themselves.
 //! - [`TopSelf`][core-topself]: Access to the root execution context.
