@@ -19,7 +19,7 @@ documentation.workspace = true
 libm = "0.2.6"
 
 [dependencies.getrandom]
-version = "0.3.1"
+version = "0.3.4"
 default-features = false
 
 [dependencies.rand]
