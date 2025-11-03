@@ -137,11 +137,6 @@ and leave a comment that you're beginning to investigate. If there is no issue,
 please file one before beginning to work on a PR. [Good first issues are labeled
 `E-easy`][e-easy].
 
-### Discussion
-
-If you'd like to engage in a discussion outside of GitHub, you can [join
-Artichoke's public Discord server][discord].
-
 ## License
 
 `artichoke` is licensed with the [MIT License](LICENSE) (c) Ryan Lopopolo.
@@ -171,5 +166,4 @@ sources and derived works in Artichoke.
   https://github.com/artichoke/artichoke/labels/A-memory-management
 [github-issues]: https://github.com/artichoke/artichoke/issues
 [file-an-issue]: https://github.com/artichoke/artichoke/issues/new
-[discord]: https://discord.gg/QCe2tp2
 [e-easy]: https://github.com/artichoke/artichoke/labels/E-easy
