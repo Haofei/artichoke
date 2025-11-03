@@ -17,11 +17,11 @@ documentation.workspace = true
 posix-space = "1.0.3"
 
 [dependencies.bstr]
-version = "1.2.0"
+version = "1.12.1"
 default-features = false
 
 [dependencies.rustyline]
-version = "16.0.0"
+version = "17.0.2"
 optional = true
 default-features = false
 

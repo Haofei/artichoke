@@ -20,7 +20,7 @@ bitflags = "2.3.3"
 posix-space = "1.0.2"
 
 [dependencies.bstr]
-version = "1.2.0"
+version = "1.12.1"
 default-features = false
 features = ["alloc"]
 

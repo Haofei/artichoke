@@ -23,7 +23,7 @@ default-features = false
 features = ["alloc"]
 
 [dependencies.getrandom]
-version = "0.3.1"
+version = "0.3.4"
 default-features = false
 
 [dependencies.rand]
