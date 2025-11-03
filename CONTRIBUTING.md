@@ -23,13 +23,6 @@ please file one before beginning to work on a PR. [Good first issues are labeled
 [good first issues are labeled `e-easy`]:
   https://github.com/artichoke/artichoke/labels/E-easy
 
-## Discussion
-
-If you'd like to engage in a discussion outside of GitHub, you can [join
-Artichoke's public Discord server].
-
-[join artichoke's public discord server]: https://discord.gg/QCe2tp2
-
 ## Implementation Philosophy
 
 - Prefer pure Ruby implementations when initially implementing features.
