@@ -39,7 +39,7 @@ path = "../artichoke-load-path"
 default-features = false
 
 [dependencies.bstr]
-version = "1.2.0"
+version = "1.12.1"
 default-features = false
 features = ["alloc"]
 
